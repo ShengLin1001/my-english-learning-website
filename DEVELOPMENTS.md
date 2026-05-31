@@ -582,6 +582,21 @@ Current backup options:
 - JSON export for portability
 - SQLite database download for full local backup
 
+## Implemented Seventh Version
+
+The seventh version improves dictionary import safety:
+
+- Rebuilt the import page around a preview workflow
+- Added client-side preview parsing for TXT, CSV, and JSON
+- Shows new, duplicate, and invalid row counts before import
+- Shows a first-page preview of parsed rows
+- Disables confirm import when no new valid rows are available
+- Keeps server-side parsing and duplicate checks as the source of truth
+- Updated import examples to avoid encoding-fragile placeholder text
+- Added import preview styling
+
+This version reduces the risk of polluting the vocabulary library with malformed imports.
+
 ## Engineering Principles
 
 - Keep generated AI content structured and cached.

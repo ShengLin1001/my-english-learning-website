@@ -134,7 +134,7 @@ function makeImportedWord(text: string, meaningZh: string, examples: string[], t
 
 function normalizeTags(value: string) {
   return value
-    .split(/[,;，；\n]/)
+    .split(/[,;\n]/)
     .map((item) => item.trim())
     .filter(Boolean)
     .slice(0, 8);

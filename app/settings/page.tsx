@@ -39,7 +39,7 @@ export default function SettingsPage() {
         </div>
         <div className="panel">
           <h2>Next Stage</h2>
-          <p>The next version should add richer review analytics, import preview, and visible AI request results on each page.</p>
+          <p>The next version should add editable daily sentences, grammar history management, and visible AI request results on each page.</p>
         </div>
       </section>
     </div>

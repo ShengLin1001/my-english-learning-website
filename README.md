@@ -57,6 +57,7 @@ The current runnable version includes:
 - Vocabulary library
 - Manual word creation
 - CSV, JSON, and TXT word import
+- Import preview with duplicate and invalid-row detection
 - Word detail page
 - Word editing
 - Single-word deletion with related review cleanup
@@ -196,7 +197,7 @@ The next recommended version is the data-layer upgrade:
 
 - Add user-visible AI error/status messages
 - Add richer review analytics and progress charts
-- Add import preview and better validation before saving words
+- Add editable daily sentence and grammar exercise history management
 
 ## Repository Notes
 
