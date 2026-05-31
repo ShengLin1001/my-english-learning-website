@@ -37,6 +37,17 @@ The repository is currently planned around:
 
 The first version should work locally and remain usable even when AI credentials are not configured.
 
+## AI Setup
+
+AI calls are made from server actions through the OpenAI Responses API. Configure these values in `.env` or `.env.local`:
+
+```text
+OPENAI_API_KEY=your_api_key_here
+OPENAI_MODEL=gpt-5.2
+```
+
+If `OPENAI_API_KEY` is missing, the app keeps working and saves fallback learning content instead of calling the API.
+
 ## Current MVP Status
 
 The current runnable version includes:
@@ -165,10 +176,10 @@ Grammar training and listening practice can be added after the vocabulary and re
 
 The next recommended version is the data-layer upgrade:
 
-- Add real AI routes for word enrichment and academic writing
-- Add structured prompt/output validation
-- Cache all generated AI content in SQLite
-- Keep the app usable when no AI key is configured
+- Extend AI to grammar exercise generation
+- Add AI-assisted listening prompts and feedback
+- Add user-visible AI error/status messages
+- Add export and backup tools for the SQLite learning database
 
 ## Repository Notes
 

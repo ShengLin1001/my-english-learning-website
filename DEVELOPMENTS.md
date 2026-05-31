@@ -522,6 +522,25 @@ data/dev.db
 
 The database file is ignored by Git.
 
+## Implemented Fourth Version
+
+The fourth version connects server-side AI generation for the highest-value flows:
+
+- Added `lib/ai.ts`
+- Added OpenAI Responses API integration through server-side `fetch`
+- Added structured JSON Schema output for word learning content
+- Added structured JSON Schema output for academic writing feedback
+- Connected AI word enrichment to the existing word detail action
+- Connected AI academic writing feedback to the writing practice action
+- Preserved deterministic fallback behavior when `OPENAI_API_KEY` is missing
+- Added `OPENAI_MODEL` configuration with `gpt-5.2` as the default
+- Updated settings and documentation for AI configuration
+
+Current AI-backed features:
+
+- Word meanings, English definitions, examples, collocations, academic usage, synonyms, and common mistakes
+- Academic writing polished version, formal version, concise version, revision notes, and reusable patterns
+
 ## Engineering Principles
 
 - Keep generated AI content structured and cached.

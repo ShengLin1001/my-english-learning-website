@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { generateWordLearningContent, generateWritingFeedback } from "./ai";
 import {
   createId,
   createListeningPractice,
@@ -242,18 +243,14 @@ export async function enrichWord(formData: FormData) {
     redirect("/words");
   }
 
-  word.definitionEn ||= `${word.text} is a word to learn through context, examples, and repeated use.`;
-  word.meaningZh ||= "Add a Chinese meaning based on real context.";
-  word.examples = word.examples.length
-    ? word.examples
-    : [
-        `Researchers use ${word.text} to express a precise idea in context.`,
-        `A good learner studies ${word.text} through examples rather than isolated translation.`
-      ];
-  word.collocations = word.collocations.length ? word.collocations : [`${word.text} in context`, `use ${word.text} precisely`];
-  word.academicUsage ||= `In academic writing, focus on whether "${word.text}" is precise, necessary, and supported by the sentence context.`;
-  word.synonyms ||= "Add synonym distinctions after real examples are collected.";
-  word.commonMistakes ||= "Avoid translating the word mechanically without checking sentence context.";
+  const content = await generateWordLearningContent(word);
+  word.definitionEn = content.definitionEn;
+  word.meaningZh = content.meaningZh;
+  word.examples = content.examples;
+  word.collocations = content.collocations;
+  word.academicUsage = content.academicUsage;
+  word.synonyms = content.synonyms;
+  word.commonMistakes = content.commonMistakes;
   word.updatedAt = new Date().toISOString();
 
   await updateStoredWord(word);
@@ -264,17 +261,17 @@ export async function enrichWord(formData: FormData) {
 export async function addWritingPractice(formData: FormData) {
   const inputText = getString(formData, "inputText");
   const context = getString(formData, "context");
+  const feedback = await generateWritingFeedback(inputText, context);
 
   const practice: WritingPractice = {
     id: createId("writing"),
     inputText,
     context,
-    polishedText: inputText ? `A more precise academic version: ${inputText}` : "",
-    formalVersion: inputText ? `It is demonstrated that ${inputText.charAt(0).toLowerCase()}${inputText.slice(1)}` : "",
-    conciseVersion: inputText,
-    revisionNotes:
-      "This first version stores the practice record and provides a placeholder response. Connect the AI route later for richer feedback.",
-    patterns: ["It is demonstrated that...", "These results indicate that...", "This observation suggests that..."],
+    polishedText: feedback.polishedText,
+    formalVersion: feedback.formalVersion,
+    conciseVersion: feedback.conciseVersion,
+    revisionNotes: feedback.revisionNotes,
+    patterns: feedback.patterns,
     createdAt: new Date().toISOString()
   };
 

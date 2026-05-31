@@ -11,7 +11,8 @@ export default function SettingsPage() {
       <section className="grid grid-2">
         <div className="panel">
           <h2>AI Configuration</h2>
-          <p>Configure `OPENAI_API_KEY` in `.env` or `.env.local`. AI requests should stay on the server side.</p>
+          <p>Configure `OPENAI_API_KEY` and optional `OPENAI_MODEL` in `.env` or `.env.local`. AI requests run only on the server side.</p>
+          <p>Without an API key, word enrichment and writing feedback use deterministic fallback content.</p>
         </div>
         <div className="panel">
           <h2>Data Storage</h2>
@@ -23,7 +24,7 @@ export default function SettingsPage() {
         </div>
         <div className="panel">
           <h2>Next Stage</h2>
-          <p>The next version should connect real AI generation for word enrichment, grammar feedback, and academic writing coaching.</p>
+          <p>The next version should extend AI feedback to grammar exercises and listening practice.</p>
         </div>
       </section>
     </div>
