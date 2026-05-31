@@ -1,3 +1,4 @@
+import { addGrammarExercise } from "@/lib/actions";
 import { readData } from "@/lib/store";
 
 export default async function GrammarPage() {
@@ -7,9 +8,12 @@ export default async function GrammarPage() {
     <div className="page">
       <div className="page-header">
         <div>
-          <h1>语法训练</h1>
-          <p>第一版提供即时反馈式练习框架，后续可接入 AI 按你的错误生成新题。</p>
+          <h1>Grammar Training</h1>
+          <p>Generate short exercises from your current learning material, then check the answer and explanation immediately.</p>
         </div>
+        <form action={addGrammarExercise}>
+          <button type="submit">Generate Exercise</button>
+        </form>
       </div>
 
       <section className="grid">
@@ -17,12 +21,15 @@ export default async function GrammarPage() {
           <div className="panel" key={exercise.id}>
             <div className="row">
               <span className="status">{exercise.type}</span>
-              <h2>练习</h2>
+              <h2>Exercise</h2>
             </div>
             <p>{exercise.prompt}</p>
             <details>
-              <summary>查看答案和解释</summary>
-              <p><strong>答案：</strong>{exercise.answer}</p>
+              <summary>Show answer and feedback</summary>
+              <p>
+                <strong>Answer: </strong>
+                {exercise.answer}
+              </p>
               <p>{exercise.explanation}</p>
             </details>
           </div>

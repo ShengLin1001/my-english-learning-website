@@ -210,6 +210,15 @@ export async function createWritingPractice(practice: WritingPractice) {
   });
 }
 
+export async function createGrammarExercise(exercise: GrammarExercise) {
+  await prisma.grammarExercise.create({
+    data: {
+      ...exercise,
+      createdAt: new Date(exercise.createdAt)
+    }
+  });
+}
+
 export async function createListeningPractice(practice: ListeningPractice) {
   await prisma.listeningPractice.create({
     data: {

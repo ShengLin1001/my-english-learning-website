@@ -24,7 +24,7 @@ export default function SettingsPage() {
         </div>
         <div className="panel">
           <h2>Next Stage</h2>
-          <p>The next version should extend AI feedback to grammar exercises and listening practice.</p>
+          <p>The next version should add visible AI status messages, database backup, and export tools.</p>
         </div>
       </section>
     </div>

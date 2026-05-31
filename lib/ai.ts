@@ -1,4 +1,4 @@
-import { Word } from "./types";
+import { GrammarExercise, Word } from "./types";
 
 type JsonSchema = {
   name: string;
@@ -21,6 +21,17 @@ export type WritingFeedback = {
   conciseVersion: string;
   revisionNotes: string;
   patterns: string[];
+};
+
+export type ListeningFeedback = {
+  feedback: string;
+};
+
+export type GrammarExerciseDraft = {
+  type: GrammarExercise["type"];
+  prompt: string;
+  answer: string;
+  explanation: string;
 };
 
 const wordSchema: JsonSchema = {
@@ -72,6 +83,33 @@ const writingSchema: JsonSchema = {
   }
 };
 
+const grammarSchema: JsonSchema = {
+  name: "grammar_exercise",
+  schema: {
+    type: "object",
+    additionalProperties: false,
+    required: ["type", "prompt", "answer", "explanation"],
+    properties: {
+      type: { type: "string", enum: ["fill", "correction", "rewrite", "naturalness"] },
+      prompt: { type: "string" },
+      answer: { type: "string" },
+      explanation: { type: "string" }
+    }
+  }
+};
+
+const listeningSchema: JsonSchema = {
+  name: "listening_feedback",
+  schema: {
+    type: "object",
+    additionalProperties: false,
+    required: ["feedback"],
+    properties: {
+      feedback: { type: "string" }
+    }
+  }
+};
+
 export async function generateWordLearningContent(word: Word): Promise<WordLearningContent> {
   const fallback = fallbackWordContent(word);
 
@@ -99,6 +137,30 @@ export async function generateWritingFeedback(inputText: string, context: string
     instructions:
       "You are an academic English writing coach for scientific papers. Improve clarity, precision, concision, and formal academic style. Explain the revision briefly.",
     input: [`Writing context: ${context}`, `Original text: ${inputText}`].join("\n")
+  });
+}
+
+export async function generateGrammarExercise(sourceText: string): Promise<GrammarExerciseDraft> {
+  const fallback = fallbackGrammarExercise(sourceText);
+
+  return callResponsesJson<GrammarExerciseDraft>({
+    schema: grammarSchema,
+    fallback,
+    instructions:
+      "You are an English grammar coach. Create one short, useful exercise with immediate feedback. Prefer academic English examples when possible.",
+    input: `Create one grammar exercise based on this learning material:\n${sourceText}`
+  });
+}
+
+export async function generateListeningFeedback(sourceText: string, userTranscript: string): Promise<ListeningFeedback> {
+  const fallback = fallbackListeningFeedback(sourceText, userTranscript);
+
+  return callResponsesJson<ListeningFeedback>({
+    schema: listeningSchema,
+    fallback,
+    instructions:
+      "You are an English listening coach. Compare the learner transcript with the source text. Give concise, learning-oriented feedback, not exam scoring.",
+    input: [`Source text: ${sourceText}`, `Learner transcript: ${userTranscript}`].join("\n")
   });
 }
 
@@ -190,5 +252,29 @@ function fallbackWritingFeedback(inputText: string): WritingFeedback {
     revisionNotes:
       "Fallback response: configure OPENAI_API_KEY to generate detailed AI feedback. This record is still saved for later review.",
     patterns: ["It is demonstrated that...", "These results indicate that...", "This observation suggests that..."]
+  };
+}
+
+function fallbackGrammarExercise(sourceText: string): GrammarExerciseDraft {
+  const base = sourceText || "The results indicate that the proposed method improves performance.";
+
+  return {
+    type: "rewrite",
+    prompt: `Rewrite this sentence in a more precise academic style: ${base}`,
+    answer: base,
+    explanation:
+      "Fallback exercise: configure OPENAI_API_KEY to generate adaptive grammar exercises. Focus on precision, verb choice, and sentence structure."
+  };
+}
+
+function fallbackListeningFeedback(sourceText: string, userTranscript: string): ListeningFeedback {
+  const sourceWords = sourceText.toLowerCase().split(/\W+/).filter(Boolean);
+  const userWords = new Set(userTranscript.toLowerCase().split(/\W+/).filter(Boolean));
+  const missed = Array.from(new Set(sourceWords.filter((word) => !userWords.has(word)))).slice(0, 8);
+
+  return {
+    feedback: missed.length
+      ? `Missing keywords: ${missed.join(", ")}. Replay at a slower speed and focus on these words.`
+      : "Strong match. Repeat once at normal speed and imitate the rhythm."
   };
 }

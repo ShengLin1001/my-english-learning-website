@@ -541,6 +541,26 @@ Current AI-backed features:
 - Word meanings, English definitions, examples, collocations, academic usage, synonyms, and common mistakes
 - Academic writing polished version, formal version, concise version, revision notes, and reusable patterns
 
+## Implemented Fifth Version
+
+The fifth version extends AI-assisted learning beyond words and writing:
+
+- Added structured JSON Schema output for grammar exercise generation
+- Added AI/fallback grammar exercise creation from current learning material
+- Added `addGrammarExercise` server action
+- Added database write helper for generated grammar exercises
+- Rebuilt the grammar page with a "Generate Exercise" action
+- Added structured AI/fallback listening feedback
+- Connected listening submissions to AI/fallback feedback
+- Rebuilt the listening page with clearer learning-oriented UI text
+
+Current AI-backed features:
+
+- Word learning notes
+- Academic writing feedback
+- Grammar exercise generation
+- Listening transcript feedback
+
 ## Engineering Principles
 
 - Keep generated AI content structured and cached.

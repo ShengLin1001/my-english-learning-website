@@ -176,10 +176,9 @@ Grammar training and listening practice can be added after the vocabulary and re
 
 The next recommended version is the data-layer upgrade:
 
-- Extend AI to grammar exercise generation
-- Add AI-assisted listening prompts and feedback
 - Add user-visible AI error/status messages
 - Add export and backup tools for the SQLite learning database
+- Add richer review analytics and progress charts
 
 ## Repository Notes
 

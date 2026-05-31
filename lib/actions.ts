@@ -2,10 +2,11 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { generateWordLearningContent, generateWritingFeedback } from "./ai";
+import { generateGrammarExercise, generateListeningFeedback, generateWordLearningContent, generateWritingFeedback } from "./ai";
 import {
   createId,
   createListeningPractice,
+  createGrammarExercise,
   createReviewLog,
   createWord,
   createWords,
@@ -16,7 +17,7 @@ import {
   readData,
   updateStoredWord
 } from "./store";
-import { ListeningPractice, ReviewLog, Word, WordStatus, WritingPractice } from "./types";
+import { GrammarExercise, ListeningPractice, ReviewLog, Word, WordStatus, WritingPractice } from "./types";
 
 function getString(formData: FormData, name: string) {
   return String(formData.get(name) ?? "").trim();
@@ -234,6 +235,28 @@ function buildReviewFeedback(word: string, rating: WordStatus) {
   return `Return to ${word} soon with examples and collocations.`;
 }
 
+export async function addGrammarExercise() {
+  const data = await readData();
+  const sourceText =
+    data.words[0]?.examples[0] ||
+    data.dailySentences[0]?.sentence ||
+    "The results indicate that the proposed method improves performance.";
+  const draft = await generateGrammarExercise(sourceText);
+
+  const exercise: GrammarExercise = {
+    id: createId("grammar"),
+    type: draft.type,
+    prompt: draft.prompt,
+    answer: draft.answer,
+    explanation: draft.explanation,
+    createdAt: new Date().toISOString()
+  };
+
+  await createGrammarExercise(exercise);
+  revalidatePath("/grammar");
+  redirect("/grammar");
+}
+
 export async function enrichWord(formData: FormData) {
   const wordId = getString(formData, "wordId");
   const data = await readData();
@@ -283,16 +306,14 @@ export async function addWritingPractice(formData: FormData) {
 export async function submitListeningPractice(formData: FormData) {
   const sourceText = getString(formData, "sourceText");
   const userTranscript = getString(formData, "userTranscript");
-  const sourceWords = sourceText.toLowerCase().split(/\W+/).filter(Boolean);
-  const userWords = new Set(userTranscript.toLowerCase().split(/\W+/).filter(Boolean));
-  const missed = sourceWords.filter((word) => !userWords.has(word));
+  const aiFeedback = await generateListeningFeedback(sourceText, userTranscript);
 
   const practice: ListeningPractice = {
     id: createId("listening"),
     sourceText,
     mode: "sentence",
     userTranscript,
-    feedback: missed.length ? `Missing keywords: ${Array.from(new Set(missed)).slice(0, 8).join(", ")}` : "Strong match. Repeat once at normal speed.",
+    feedback: aiFeedback.feedback,
     createdAt: new Date().toISOString()
   };
 

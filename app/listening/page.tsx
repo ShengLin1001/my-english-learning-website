@@ -14,13 +14,13 @@ export default async function ListeningPage() {
     <div className="page">
       <div className="page-header">
         <div>
-          <h1>听力训练</h1>
-          <p>基于当前学习材料朗读句子，输入听到的关键词，并得到即时反馈。</p>
+          <h1>Listening Training</h1>
+          <p>Listen to learning material, write what you hear, and get immediate feedback focused on missed words and rhythm.</p>
         </div>
       </div>
 
       <section className="panel">
-        <h2>训练文本</h2>
+        <h2>Training Text</h2>
         <p className="sentence">{sourceText}</p>
         <ListeningControls text={sourceText} />
       </section>
@@ -28,15 +28,15 @@ export default async function ListeningPage() {
       <form className="panel form" action={submitListeningPractice} style={{ marginTop: 16 }}>
         <input type="hidden" name="sourceText" value={sourceText} />
         <label>
-          听到的内容或关键词
-          <textarea name="userTranscript" required placeholder="播放后写下你听到的关键词或完整句子。" />
+          What you heard
+          <textarea name="userTranscript" required placeholder="After playing the audio, write the full sentence or the keywords you heard." />
         </label>
-        <button type="submit">提交反馈</button>
+        <button type="submit">Submit Feedback</button>
       </form>
 
       {latest ? (
         <section className="panel" style={{ marginTop: 16 }}>
-          <h2>最近反馈</h2>
+          <h2>Latest Feedback</h2>
           <p>{latest.feedback}</p>
         </section>
       ) : null}
