@@ -2,8 +2,20 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { createId, nextReviewDate, normalizeList, readData, writeData } from "./store";
-import { Word, WordStatus } from "./types";
+import {
+  createId,
+  createListeningPractice,
+  createReviewLog,
+  createWord,
+  createWords,
+  createWritingPractice,
+  deleteStoredWord,
+  nextReviewDate,
+  normalizeList,
+  readData,
+  updateStoredWord
+} from "./store";
+import { ListeningPractice, ReviewLog, Word, WordStatus, WritingPractice } from "./types";
 
 function getString(formData: FormData, name: string) {
   return String(formData.get(name) ?? "").trim();
@@ -16,7 +28,6 @@ export async function addWord(formData: FormData) {
   }
 
   const now = new Date().toISOString();
-  const data = await readData();
 
   const word: Word = {
     id: createId("word"),
@@ -38,8 +49,7 @@ export async function addWord(formData: FormData) {
     updatedAt: now
   };
 
-  data.words.unshift(word);
-  await writeData(data);
+  await createWord(word);
   revalidatePath("/words");
   redirect(`/words/${word.id}`);
 }
@@ -93,8 +103,7 @@ export async function importWords(formData: FormData) {
     redirect("/words/import?error=invalid-format");
   }
 
-  data.words.unshift(...words);
-  await writeData(data);
+  await createWords(words);
   revalidatePath("/words");
   redirect(`/words?imported=${words.length}&skipped=${Math.max(0, raw.split(/\r?\n/).filter(Boolean).length - words.length)}`);
 }
@@ -170,7 +179,7 @@ export async function updateWord(formData: FormData) {
   word.commonMistakes = getString(formData, "commonMistakes");
   word.updatedAt = new Date().toISOString();
 
-  await writeData(data);
+  await updateStoredWord(word);
   revalidatePath("/words");
   revalidatePath(`/words/${word.id}`);
   redirect(`/words/${word.id}`);
@@ -178,11 +187,7 @@ export async function updateWord(formData: FormData) {
 
 export async function deleteWord(formData: FormData) {
   const wordId = getString(formData, "wordId");
-  const data = await readData();
-  data.words = data.words.filter((word) => word.id !== wordId);
-  data.reviews = data.reviews.filter((review) => review.wordId !== wordId);
-
-  await writeData(data);
+  await deleteStoredWord(wordId);
   revalidatePath("/words");
   revalidatePath("/review");
   redirect("/words?deleted=1");
@@ -205,16 +210,17 @@ export async function reviewWord(formData: FormData) {
   word.nextReviewAt = nextReviewDate(rating);
   word.updatedAt = now;
 
-  data.reviews.unshift({
+  const review: ReviewLog = {
     id: createId("review"),
     wordId,
     rating,
     userAnswer,
     feedback: buildReviewFeedback(word.text, rating),
     reviewedAt: now
-  });
+  };
 
-  await writeData(data);
+  await updateStoredWord(word);
+  await createReviewLog(review);
   revalidatePath("/review");
   revalidatePath("/words");
   redirect("/review");
@@ -250,7 +256,7 @@ export async function enrichWord(formData: FormData) {
   word.commonMistakes ||= "Avoid translating the word mechanically without checking sentence context.";
   word.updatedAt = new Date().toISOString();
 
-  await writeData(data);
+  await updateStoredWord(word);
   revalidatePath(`/words/${word.id}`);
   redirect(`/words/${word.id}`);
 }
@@ -258,9 +264,8 @@ export async function enrichWord(formData: FormData) {
 export async function addWritingPractice(formData: FormData) {
   const inputText = getString(formData, "inputText");
   const context = getString(formData, "context");
-  const data = await readData();
 
-  data.writingPractices.unshift({
+  const practice: WritingPractice = {
     id: createId("writing"),
     inputText,
     context,
@@ -271,9 +276,9 @@ export async function addWritingPractice(formData: FormData) {
       "This first version stores the practice record and provides a placeholder response. Connect the AI route later for richer feedback.",
     patterns: ["It is demonstrated that...", "These results indicate that...", "This observation suggests that..."],
     createdAt: new Date().toISOString()
-  });
+  };
 
-  await writeData(data);
+  await createWritingPractice(practice);
   revalidatePath("/writing");
   redirect("/writing");
 }
@@ -281,21 +286,20 @@ export async function addWritingPractice(formData: FormData) {
 export async function submitListeningPractice(formData: FormData) {
   const sourceText = getString(formData, "sourceText");
   const userTranscript = getString(formData, "userTranscript");
-  const data = await readData();
   const sourceWords = sourceText.toLowerCase().split(/\W+/).filter(Boolean);
   const userWords = new Set(userTranscript.toLowerCase().split(/\W+/).filter(Boolean));
   const missed = sourceWords.filter((word) => !userWords.has(word));
 
-  data.listeningPractices.unshift({
+  const practice: ListeningPractice = {
     id: createId("listening"),
     sourceText,
     mode: "sentence",
     userTranscript,
     feedback: missed.length ? `Missing keywords: ${Array.from(new Set(missed)).slice(0, 8).join(", ")}` : "Strong match. Repeat once at normal speed.",
     createdAt: new Date().toISOString()
-  });
+  };
 
-  await writeData(data);
+  await createListeningPractice(practice);
   revalidatePath("/listening");
   redirect("/listening");
 }

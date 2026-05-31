@@ -31,8 +31,8 @@ The repository is currently planned around:
 
 - Next.js
 - TypeScript
-- Local JSON storage for the first runnable MVP
-- Prisma and SQLite as the next persistence upgrade
+- Prisma
+- SQLite
 - Server-side AI API routes
 
 The first version should work locally and remain usable even when AI credentials are not configured.
@@ -60,7 +60,7 @@ The current runnable version includes:
 - Listening practice with browser speech synthesis
 - Settings page
 
-Learning data is currently stored in `data/app-data.json`, which is generated automatically at runtime and ignored by Git.
+Learning data is stored in a local SQLite database at `data/dev.db`, which is ignored by Git.
 
 ## Local Development
 
@@ -112,6 +112,35 @@ http://localhost:3000
 
 Do not use PowerShell syntax such as `$env:npm_config_cache=...` or `& 'C:\Program Files\nodejs\npm.cmd' ...` inside Git Bash.
 
+## Database Setup
+
+The project uses Prisma with SQLite. The local `.env` file should contain:
+
+```text
+DATABASE_URL="file:../data/dev.db"
+```
+
+Generate the Prisma client:
+
+```powershell
+$env:npm_config_cache='F:\BaiduSyncdisk\version20240608\main_code_space\my-english-learning-website\.npm-cache'
+& 'C:\Program Files\nodejs\npm.cmd' run db:generate
+```
+
+Create or update the local SQLite schema:
+
+```powershell
+$env:npm_config_cache='F:\BaiduSyncdisk\version20240608\main_code_space\my-english-learning-website\.npm-cache'
+& 'C:\Program Files\nodejs\npm.cmd' run db:push
+```
+
+If older JSON data exists in `data/app-data.json`, migrate it into SQLite:
+
+```powershell
+$env:npm_config_cache='F:\BaiduSyncdisk\version20240608\main_code_space\my-english-learning-website\.npm-cache'
+& 'C:\Program Files\nodejs\npm.cmd' run db:migrate-json
+```
+
 ## Development Plan
 
 See [DEVELOPMENTS.md](./DEVELOPMENTS.md) for the detailed implementation roadmap, proposed data models, routes, MVP scope, and engineering risks.
@@ -136,11 +165,10 @@ Grammar training and listening practice can be added after the vocabulary and re
 
 The next recommended version is the data-layer upgrade:
 
-- Replace local JSON storage with Prisma and SQLite
-- Add database migrations
-- Preserve the current route structure and learning workflows
-- Add safer data backup and export
-- Prepare the project for deployment
+- Add real AI routes for word enrichment and academic writing
+- Add structured prompt/output validation
+- Cache all generated AI content in SQLite
+- Keep the app usable when no AI key is configured
 
 ## Repository Notes
 

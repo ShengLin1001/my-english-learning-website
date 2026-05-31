@@ -461,7 +461,7 @@ The repository now contains a runnable Next.js MVP with:
 - Listening practice with browser speech synthesis at `/listening`
 - Settings page at `/settings`
 
-Current storage is local JSON in `data/app-data.json`. This is intentionally simple for the first version. A later phase can replace the storage layer with Prisma and SQLite while preserving the route structure and learning workflows.
+First-version storage used local JSON in `data/app-data.json`. The third version replaces this with Prisma and SQLite while preserving the route structure and learning workflows.
 
 Verified commands:
 
@@ -498,6 +498,29 @@ Local HTTP checks returned 200 for:
 - `/words`
 - `/words/import`
 - `/words/new`
+
+## Implemented Third Version
+
+The third version upgrades the data layer:
+
+- Added Prisma and SQLite dependencies
+- Added `prisma/schema.prisma`
+- Added local Prisma client helper at `lib/prisma.ts`
+- Replaced JSON-file storage with Prisma-backed storage in `lib/store.ts`
+- Preserved the existing `readData()` interface for pages
+- Added database write helpers for words, reviews, writing practice, and listening practice
+- Updated server actions to write through Prisma instead of rewriting `data/app-data.json`
+- Added `db:generate`, `db:push`, and `db:migrate-json` scripts
+- Added `scripts/migrate-json-to-prisma.mjs` for migrating older local JSON learning data
+- Updated local setup documentation for SQLite
+
+Local database:
+
+```text
+data/dev.db
+```
+
+The database file is ignored by Git.
 
 ## Engineering Principles
 

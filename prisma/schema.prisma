@@ -1,0 +1,85 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Word {
+  id             String      @id
+  text           String      @unique
+  phonetic       String      @default("")
+  meaningZh      String      @default("")
+  definitionEn   String      @default("")
+  examples       String      @default("[]")
+  collocations   String      @default("[]")
+  tags           String      @default("[]")
+  academicUsage  String      @default("")
+  synonyms       String      @default("")
+  commonMistakes String      @default("")
+  source         String      @default("manual")
+  status         String      @default("new")
+  familiarity    Int         @default(0)
+  nextReviewAt   DateTime
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  reviews        ReviewLog[]
+
+  @@index([status])
+  @@index([nextReviewAt])
+}
+
+model ReviewLog {
+  id         String   @id
+  wordId     String
+  rating     String
+  userAnswer String   @default("")
+  feedback   String   @default("")
+  reviewedAt DateTime @default(now())
+  word       Word     @relation(fields: [wordId], references: [id], onDelete: Cascade)
+
+  @@index([wordId])
+  @@index([reviewedAt])
+}
+
+model DailySentence {
+  id              String   @id
+  sentence        String
+  translationZh   String   @default("")
+  grammarNotes    String   @default("")
+  keywords        String   @default("[]")
+  imitationPrompt String   @default("")
+  date            String   @unique
+}
+
+model WritingPractice {
+  id             String   @id
+  inputText      String
+  context        String   @default("Results")
+  polishedText   String   @default("")
+  formalVersion  String   @default("")
+  conciseVersion String   @default("")
+  revisionNotes  String   @default("")
+  patterns       String   @default("[]")
+  createdAt      DateTime @default(now())
+}
+
+model GrammarExercise {
+  id          String   @id
+  type        String
+  prompt      String
+  answer      String
+  explanation String   @default("")
+  createdAt   DateTime @default(now())
+}
+
+model ListeningPractice {
+  id             String   @id
+  sourceText     String
+  mode           String   @default("sentence")
+  userTranscript String   @default("")
+  feedback       String   @default("")
+  createdAt      DateTime @default(now())
+}

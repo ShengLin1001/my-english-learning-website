@@ -12,13 +12,13 @@ Preferred stack unless changed by the user:
 
 - Next.js
 - TypeScript
-- Local JSON storage for the first runnable MVP
-- Prisma and SQLite as the next persistence upgrade
+- Prisma
+- SQLite
 - Server-side AI API routes
 
 Keep the application usable without configured AI credentials. AI features should degrade gracefully.
 
-The current first version stores data in `data/app-data.json`. This file is generated at runtime and ignored by Git.
+The current version stores data in `data/dev.db` through Prisma and SQLite. This file is generated locally and ignored by Git.
 
 ## Documentation Map
 

@@ -7,9 +7,13 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate-json": "node scripts/migrate-json-to-prisma.mjs"
   },
   "dependencies": {
+    "@prisma/client": "^6.19.3",
     "@types/node": "^24.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
@@ -18,5 +22,7 @@
     "react-dom": "^19.0.0",
     "typescript": "^5.7.0"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "prisma": "^6.19.3"
+  }
 }
