@@ -208,6 +208,29 @@ label {
   padding: 5px 9px;
 }
 
+.tag {
+  background: #f4eadf;
+  border-radius: 999px;
+  color: #8a4518;
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 5px 9px;
+}
+
+.filters {
+  align-items: end;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(220px, 1fr) 160px 160px auto auto;
+  margin-bottom: 16px;
+}
+
+button.danger,
+.button.danger {
+  background: #a23b31;
+}
+
 .empty {
   border: 1px dashed #b8c7c1;
   border-radius: 8px;
@@ -239,7 +262,8 @@ label {
   }
 
   .grid-2,
-  .grid-3 {
+  .grid-3,
+  .filters {
     grid-template-columns: 1fr;
   }
 

@@ -26,6 +26,7 @@ export async function addWord(formData: FormData) {
     definitionEn: getString(formData, "definitionEn"),
     examples: normalizeList(formData.get("examples")),
     collocations: normalizeList(formData.get("collocations")),
+    tags: normalizeTags(getString(formData, "tags")),
     academicUsage: getString(formData, "academicUsage"),
     synonyms: "",
     commonMistakes: "",
@@ -51,38 +52,54 @@ export async function importWords(formData: FormData) {
   const now = new Date().toISOString();
   const words: Word[] = [];
 
-  if (format === "json") {
-    const parsed = JSON.parse(raw) as Array<{ word?: string; text?: string; meaning?: string; meaningZh?: string; example?: string }>;
-    for (const item of parsed) {
-      const text = String(item.word ?? item.text ?? "").trim();
-      if (!text || existing.has(text.toLowerCase())) continue;
-      existing.add(text.toLowerCase());
-      words.push(makeImportedWord(text, String(item.meaning ?? item.meaningZh ?? ""), item.example ? [String(item.example)] : [], now));
+  try {
+    if (format === "json") {
+      const parsed = JSON.parse(raw) as Array<{ word?: string; text?: string; meaning?: string; meaningZh?: string; example?: string; tags?: string[] | string }>;
+      if (!Array.isArray(parsed)) {
+        throw new Error("json-not-array");
+      }
+      for (const item of parsed) {
+        const text = String(item.word ?? item.text ?? "").trim();
+        if (!text || existing.has(text.toLowerCase())) continue;
+        existing.add(text.toLowerCase());
+        words.push(
+          makeImportedWord(
+            text,
+            String(item.meaning ?? item.meaningZh ?? ""),
+            item.example ? [String(item.example)] : [],
+            normalizeTags(Array.isArray(item.tags) ? item.tags.join(",") : String(item.tags ?? "")),
+            now
+          )
+        );
+      }
+    } else if (format === "csv") {
+      const lines = raw.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+      for (const [index, line] of lines.entries()) {
+        if (index === 0 && line.toLowerCase().includes("word")) continue;
+        const [text = "", meaning = "", example = "", tags = ""] = parseCsvLine(line);
+        if (!text || existing.has(text.toLowerCase())) continue;
+        existing.add(text.toLowerCase());
+        words.push(makeImportedWord(text, meaning, example ? [example] : [], normalizeTags(tags), now));
+      }
+    } else {
+      for (const line of raw.split(/\r?\n/).map((item) => item.trim()).filter(Boolean)) {
+        const [text, tagText = ""] = line.split("#").map((item) => item.trim());
+        if (!text || existing.has(text.toLowerCase())) continue;
+        existing.add(text.toLowerCase());
+        words.push(makeImportedWord(text, "", [], normalizeTags(tagText), now));
+      }
     }
-  } else if (format === "csv") {
-    const lines = raw.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
-    for (const [index, line] of lines.entries()) {
-      if (index === 0 && line.toLowerCase().includes("word")) continue;
-      const [text = "", meaning = "", example = ""] = line.split(",").map((item) => item.trim());
-      if (!text || existing.has(text.toLowerCase())) continue;
-      existing.add(text.toLowerCase());
-      words.push(makeImportedWord(text, meaning, example ? [example] : [], now));
-    }
-  } else {
-    for (const line of raw.split(/\r?\n/).map((item) => item.trim()).filter(Boolean)) {
-      if (existing.has(line.toLowerCase())) continue;
-      existing.add(line.toLowerCase());
-      words.push(makeImportedWord(line, "", [], now));
-    }
+  } catch (error) {
+    redirect("/words/import?error=invalid-format");
   }
 
   data.words.unshift(...words);
   await writeData(data);
   revalidatePath("/words");
-  redirect(`/words?imported=${words.length}`);
+  redirect(`/words?imported=${words.length}&skipped=${Math.max(0, raw.split(/\r?\n/).filter(Boolean).length - words.length)}`);
 }
 
-function makeImportedWord(text: string, meaningZh: string, examples: string[], now: string): Word {
+function makeImportedWord(text: string, meaningZh: string, examples: string[], tags: string[], now: string): Word {
   return {
     id: createId("word"),
     text,
@@ -91,6 +108,7 @@ function makeImportedWord(text: string, meaningZh: string, examples: string[], n
     definitionEn: "",
     examples,
     collocations: [],
+    tags,
     academicUsage: "",
     synonyms: "",
     commonMistakes: "",
@@ -101,6 +119,73 @@ function makeImportedWord(text: string, meaningZh: string, examples: string[], n
     createdAt: now,
     updatedAt: now
   };
+}
+
+function normalizeTags(value: string) {
+  return value
+    .split(/[,;，；\n]/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .slice(0, 8);
+}
+
+function parseCsvLine(line: string) {
+  const values: string[] = [];
+  let current = "";
+  let inQuotes = false;
+
+  for (const char of line) {
+    if (char === '"') {
+      inQuotes = !inQuotes;
+    } else if (char === "," && !inQuotes) {
+      values.push(current.trim());
+      current = "";
+    } else {
+      current += char;
+    }
+  }
+
+  values.push(current.trim());
+  return values;
+}
+
+export async function updateWord(formData: FormData) {
+  const wordId = getString(formData, "wordId");
+  const data = await readData();
+  const word = data.words.find((item) => item.id === wordId);
+
+  if (!word) {
+    redirect("/words");
+  }
+
+  word.text = getString(formData, "text") || word.text;
+  word.phonetic = getString(formData, "phonetic");
+  word.meaningZh = getString(formData, "meaningZh");
+  word.definitionEn = getString(formData, "definitionEn");
+  word.examples = normalizeList(formData.get("examples"));
+  word.collocations = normalizeList(formData.get("collocations"));
+  word.tags = normalizeTags(getString(formData, "tags"));
+  word.academicUsage = getString(formData, "academicUsage");
+  word.synonyms = getString(formData, "synonyms");
+  word.commonMistakes = getString(formData, "commonMistakes");
+  word.updatedAt = new Date().toISOString();
+
+  await writeData(data);
+  revalidatePath("/words");
+  revalidatePath(`/words/${word.id}`);
+  redirect(`/words/${word.id}`);
+}
+
+export async function deleteWord(formData: FormData) {
+  const wordId = getString(formData, "wordId");
+  const data = await readData();
+  data.words = data.words.filter((word) => word.id !== wordId);
+  data.reviews = data.reviews.filter((review) => review.wordId !== wordId);
+
+  await writeData(data);
+  revalidatePath("/words");
+  revalidatePath("/review");
+  redirect("/words?deleted=1");
 }
 
 export async function reviewWord(formData: FormData) {
@@ -152,7 +237,7 @@ export async function enrichWord(formData: FormData) {
   }
 
   word.definitionEn ||= `${word.text} is a word to learn through context, examples, and repeated use.`;
-  word.meaningZh ||= "请根据上下文补充中文释义。";
+  word.meaningZh ||= "Add a Chinese meaning based on real context.";
   word.examples = word.examples.length
     ? word.examples
     : [

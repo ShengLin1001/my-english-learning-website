@@ -8,6 +8,7 @@ export type Word = {
   definitionEn: string;
   examples: string[];
   collocations: string[];
+  tags: string[];
   academicUsage: string;
   synonyms: string;
   commonMistakes: string;

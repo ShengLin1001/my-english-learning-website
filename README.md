@@ -39,13 +39,19 @@ The first version should work locally and remain usable even when AI credentials
 
 ## Current MVP Status
 
-The first runnable version includes:
+The current runnable version includes:
 
 - Dashboard
 - Vocabulary library
 - Manual word creation
 - CSV, JSON, and TXT word import
 - Word detail page
+- Word editing
+- Single-word deletion with related review cleanup
+- Vocabulary search
+- Status and tag filters
+- Word tags
+- Import duplicate and invalid-row summary
 - Placeholder AI word enrichment saved to local data
 - Spaced repetition review flow
 - Daily sentence page
@@ -125,6 +131,16 @@ The first version includes:
 - Academic writing coach
 
 Grammar training and listening practice can be added after the vocabulary and review foundation is stable.
+
+## Near-Term Roadmap
+
+The next recommended version is the data-layer upgrade:
+
+- Replace local JSON storage with Prisma and SQLite
+- Add database migrations
+- Preserve the current route structure and learning workflows
+- Add safer data backup and export
+- Prepare the project for deployment
 
 ## Repository Notes
 

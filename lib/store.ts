@@ -42,7 +42,8 @@ const defaultData: AppData = {
 export async function readData(): Promise<AppData> {
   try {
     const raw = await fs.readFile(dataFile, "utf-8");
-    return JSON.parse(raw) as AppData;
+    const parsed = JSON.parse(raw) as AppData;
+    return migrateData(parsed);
   } catch (error) {
     await writeData(defaultData);
     return defaultData;
@@ -81,4 +82,23 @@ export function nextReviewDate(status: string) {
 
   now.setDate(now.getDate() + (daysByStatus[status] ?? 1));
   return now.toISOString();
+}
+
+function migrateData(data: AppData): AppData {
+  return {
+    ...defaultData,
+    ...data,
+    words: (data.words ?? []).map((word) => ({
+      ...word,
+      tags: word.tags ?? [],
+      examples: word.examples ?? [],
+      collocations: word.collocations ?? [],
+      nextReviewAt: word.nextReviewAt ?? new Date().toISOString()
+    })),
+    reviews: data.reviews ?? [],
+    dailySentences: data.dailySentences?.length ? data.dailySentences : defaultData.dailySentences,
+    writingPractices: data.writingPractices ?? [],
+    grammarExercises: data.grammarExercises?.length ? data.grammarExercises : defaultData.grammarExercises,
+    listeningPractices: data.listeningPractices ?? []
+  };
 }

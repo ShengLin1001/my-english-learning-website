@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { enrichWord } from "@/lib/actions";
+import { deleteWord, enrichWord } from "@/lib/actions";
 import { readData } from "@/lib/store";
 
 export default async function WordDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -17,51 +17,77 @@ export default async function WordDetailPage({ params }: { params: Promise<{ id:
       <div className="page-header">
         <div>
           <h1>{word.text}</h1>
-          <p>{word.phonetic || "尚未记录音标"} · <span className="status">{word.status}</span></p>
+          <p>
+            {word.phonetic || "No phonetic note"} · <span className="status">{word.status}</span>
+          </p>
+          {word.tags.length ? (
+            <div className="row">
+              {word.tags.map((item) => (
+                <span className="tag" key={item}>
+                  {item}
+                </span>
+              ))}
+            </div>
+          ) : null}
         </div>
-        <form action={enrichWord}>
-          <input type="hidden" name="wordId" value={word.id} />
-          <button type="submit">生成学习内容</button>
-        </form>
+        <div className="row">
+          <Link className="button secondary" href={`/words/${word.id}/edit`}>
+            Edit
+          </Link>
+          <form action={enrichWord}>
+            <input type="hidden" name="wordId" value={word.id} />
+            <button type="submit">Generate Notes</button>
+          </form>
+        </div>
       </div>
 
       <section className="grid grid-2">
         <div className="panel">
-          <h2>释义</h2>
-          <p>{word.meaningZh || "暂无中文释义。"}</p>
-          <p>{word.definitionEn || "暂无英文释义。"}</p>
+          <h2>Meaning</h2>
+          <p>{word.meaningZh || "No Chinese meaning yet."}</p>
+          <p>{word.definitionEn || "No English definition yet."}</p>
         </div>
         <div className="panel">
-          <h2>科研写作用法</h2>
-          <p>{word.academicUsage || "还没有记录科研写作用法。"}</p>
-        </div>
-      </section>
-
-      <section className="grid grid-2" style={{ marginTop: 16 }}>
-        <div className="panel">
-          <h2>例句</h2>
-          {word.examples.length ? word.examples.map((example) => <p key={example}>{example}</p>) : <p>暂无例句。</p>}
-        </div>
-        <div className="panel">
-          <h2>固定搭配</h2>
-          {word.collocations.length ? word.collocations.map((item) => <p key={item}>{item}</p>) : <p>暂无固定搭配。</p>}
+          <h2>Academic Usage</h2>
+          <p>{word.academicUsage || "No academic usage note yet."}</p>
         </div>
       </section>
 
       <section className="grid grid-2" style={{ marginTop: 16 }}>
         <div className="panel">
-          <h2>近义词辨析</h2>
-          <p>{word.synonyms || "后续可由 AI 或手动补充。"}</p>
+          <h2>Examples</h2>
+          {word.examples.length ? word.examples.map((example) => <p key={example}>{example}</p>) : <p>No examples yet.</p>}
         </div>
         <div className="panel">
-          <h2>常见错误</h2>
-          <p>{word.commonMistakes || "后续可由 AI 或手动补充。"}</p>
+          <h2>Collocations</h2>
+          {word.collocations.length ? word.collocations.map((item) => <p key={item}>{item}</p>) : <p>No collocations yet.</p>}
+        </div>
+      </section>
+
+      <section className="grid grid-2" style={{ marginTop: 16 }}>
+        <div className="panel">
+          <h2>Synonym Notes</h2>
+          <p>{word.synonyms || "Add synonym distinctions after examples are collected."}</p>
+        </div>
+        <div className="panel">
+          <h2>Common Mistakes</h2>
+          <p>{word.commonMistakes || "Add common mistakes after review or AI enrichment."}</p>
         </div>
       </section>
 
       <div className="row" style={{ marginTop: 16 }}>
-        <Link className="button secondary" href="/words">返回词库</Link>
-        <Link className="button" href="/review">去复习</Link>
+        <Link className="button secondary" href="/words">
+          Back to Library
+        </Link>
+        <Link className="button" href="/review">
+          Review
+        </Link>
+        <form action={deleteWord}>
+          <input type="hidden" name="wordId" value={word.id} />
+          <button className="danger" type="submit">
+            Delete Word
+          </button>
+        </form>
       </div>
     </div>
   );

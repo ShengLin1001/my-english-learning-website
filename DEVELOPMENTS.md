@@ -470,6 +470,35 @@ npm run typecheck
 npm run build
 ```
 
+## Implemented Second Version
+
+The second version improves the vocabulary foundation:
+
+- Added word tags to the data model
+- Added automatic migration for older local JSON records without tags
+- Added vocabulary search by word, meaning, definition, or tag
+- Added status filtering
+- Added tag filtering
+- Added word editing route at `/words/[id]/edit`
+- Added single-word deletion with related review-log cleanup
+- Improved import parsing for CSV, JSON, and TXT
+- Added import error handling for invalid input format
+- Added import summary with imported and skipped counts
+- Updated the word detail page with edit, delete, tags, and cleaner learning-note controls
+
+Verified commands:
+
+```powershell
+npm run typecheck
+npm run build
+```
+
+Local HTTP checks returned 200 for:
+
+- `/words`
+- `/words/import`
+- `/words/new`
+
 ## Engineering Principles
 
 - Keep generated AI content structured and cached.

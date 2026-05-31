@@ -5,41 +5,45 @@ export default function NewWordPage() {
     <div className="page">
       <div className="page-header">
         <div>
-          <h1>添加单词</h1>
-          <p>把平时遇到的陌生词加入词库，并记录最初的上下文。</p>
+          <h1>Add Word</h1>
+          <p>Add unfamiliar words from reading, writing, listening, or daily study.</p>
         </div>
       </div>
 
       <form className="panel form" action={addWord}>
         <label>
-          单词
-          <input name="text" required placeholder="例如: substantial" />
+          Word
+          <input name="text" required placeholder="substantial" />
         </label>
         <label>
-          音标
+          Phonetic
           <input name="phonetic" placeholder="/səbˈstænʃəl/" />
         </label>
         <label>
-          中文释义
+          Chinese Meaning
           <input name="meaningZh" placeholder="大量的；实质性的" />
         </label>
         <label>
-          英文释义
+          English Definition
           <textarea name="definitionEn" placeholder="A short English definition." />
         </label>
         <label>
-          例句，一行一个
+          Examples, one per line
           <textarea name="examples" placeholder="The experiment showed a substantial improvement." />
         </label>
         <label>
-          固定搭配，一行一个
-          <textarea name="collocations" placeholder="substantial evidence&#10;substantial improvement" />
+          Collocations, one per line
+          <textarea name="collocations" placeholder={"substantial evidence\nsubstantial improvement"} />
         </label>
         <label>
-          科研写作用法
+          Tags
+          <input name="tags" placeholder="academic, writing, listening" />
+        </label>
+        <label>
+          Academic Usage
           <textarea name="academicUsage" placeholder="Describe how this word is used in academic writing." />
         </label>
-        <button type="submit">保存单词</button>
+        <button type="submit">Save Word</button>
       </form>
     </div>
   );
