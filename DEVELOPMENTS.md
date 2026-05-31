@@ -561,6 +561,27 @@ Current AI-backed features:
 - Grammar exercise generation
 - Listening transcript feedback
 
+## Implemented Sixth Version
+
+The sixth version improves observability and data safety:
+
+- Rebuilt the dashboard with stable English UI text
+- Added vocabulary mastery rate
+- Added due-review count and today's review count
+- Added word status distribution
+- Added AI practice counters for writing, grammar, and listening
+- Added visible AI status in settings
+- Added model display in settings
+- Added JSON export endpoint at `/api/export`
+- Added SQLite backup endpoint at `/api/backup/sqlite`
+- Added backup/export buttons to settings
+- Updated documentation for data export and backup
+
+Current backup options:
+
+- JSON export for portability
+- SQLite database download for full local backup
+
 ## Engineering Principles
 
 - Keep generated AI content structured and cached.

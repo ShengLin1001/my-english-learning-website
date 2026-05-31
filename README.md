@@ -53,6 +53,7 @@ If `OPENAI_API_KEY` is missing, the app keeps working and saves fallback learnin
 The current runnable version includes:
 
 - Dashboard
+- Learning progress analytics
 - Vocabulary library
 - Manual word creation
 - CSV, JSON, and TXT word import
@@ -70,6 +71,7 @@ The current runnable version includes:
 - Academic writing practice page
 - Listening practice with browser speech synthesis
 - Settings page
+- JSON export and SQLite database backup downloads
 
 Learning data is stored in a local SQLite database at `data/dev.db`, which is ignored by Git.
 
@@ -112,7 +114,7 @@ Start the development server:
 
 ```bash
 export npm_config_cache="/f/BaiduSyncdisk/version20240608/main_code_space/my-english-learning-website/.npm-cache"
-"/c/Program Files/nodejs/npm.cmd" run dev -- --hostname 0.0.0.0 --port 3000
+"/c/Program Files/nodejs/npm.cmd" run dev -- --hostname 127.0.0.1 --port 3000
 ```
 
 Open:
@@ -152,6 +154,22 @@ $env:npm_config_cache='F:\BaiduSyncdisk\version20240608\main_code_space\my-engli
 & 'C:\Program Files\nodejs\npm.cmd' run db:migrate-json
 ```
 
+## Data Export and Backup
+
+Download a portable JSON export:
+
+```text
+http://localhost:3000/api/export
+```
+
+Download the local SQLite database:
+
+```text
+http://localhost:3000/api/backup/sqlite
+```
+
+Keep the development server bound to `127.0.0.1` when using backup endpoints so private learning data is not exposed to the local network.
+
 ## Development Plan
 
 See [DEVELOPMENTS.md](./DEVELOPMENTS.md) for the detailed implementation roadmap, proposed data models, routes, MVP scope, and engineering risks.
@@ -177,8 +195,8 @@ Grammar training and listening practice can be added after the vocabulary and re
 The next recommended version is the data-layer upgrade:
 
 - Add user-visible AI error/status messages
-- Add export and backup tools for the SQLite learning database
 - Add richer review analytics and progress charts
+- Add import preview and better validation before saving words
 
 ## Repository Notes
 

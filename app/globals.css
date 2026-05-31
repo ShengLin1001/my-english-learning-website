@@ -238,6 +238,24 @@ button.danger,
   text-align: center;
 }
 
+.progress-list {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.progress-row {
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 8px;
+}
+
+.progress-row span {
+  color: var(--muted);
+}
+
 .sentence {
   color: var(--text);
   font-size: 24px;
