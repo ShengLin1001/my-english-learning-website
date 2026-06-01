@@ -264,6 +264,49 @@ export async function addGrammarExercise() {
   redirect("/grammar");
 }
 
+export async function saveDailyExpression(formData: FormData) {
+  const text = getString(formData, "text");
+  const sentence = getString(formData, "sentence");
+
+  if (!text) {
+    redirect("/daily?error=missing-expression");
+  }
+
+  const data = await readData();
+  const existing = data.words.find((word) => word.text.toLowerCase() === text.toLowerCase());
+
+  if (existing) {
+    redirect(`/daily?duplicate=${encodeURIComponent(existing.id)}`);
+  }
+
+  const now = new Date().toISOString();
+  const word: Word = {
+    id: createId("word"),
+    text,
+    phonetic: "",
+    meaningZh: "",
+    definitionEn: "",
+    examples: sentence ? [sentence] : [],
+    collocations: [],
+    tags: ["daily-sentence"],
+    academicUsage: "",
+    synonyms: "",
+    commonMistakes: "",
+    source: "manual",
+    status: "new",
+    familiarity: 0,
+    nextReviewAt: now,
+    createdAt: now,
+    updatedAt: now
+  };
+
+  await createWord(word);
+  revalidatePath("/daily");
+  revalidatePath("/words");
+  revalidatePath("/review");
+  redirect(`/daily?saved=${encodeURIComponent(word.id)}`);
+}
+
 export async function enrichWord(formData: FormData) {
   const wordId = getString(formData, "wordId");
   const data = await readData();

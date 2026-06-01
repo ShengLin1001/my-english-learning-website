@@ -612,6 +612,20 @@ The eighth version improves the spaced-repetition review loop:
 
 This version makes review more learning-oriented by helping the user compare recall against context and see how each word is progressing over time.
 
+## Implemented Ninth Version
+
+The ninth version connects daily sentence study to the vocabulary library:
+
+- Added a server action for saving daily-sentence keywords and expressions into the word library
+- Preserves the daily sentence as the first example for saved expressions
+- Adds the `daily-sentence` tag to saved items so they can be filtered in the library
+- Prevents duplicate saved words and links back to the existing word detail page
+- Rebuilt the daily sentence page with save buttons for keywords
+- Added a custom expression form for useful phrases or sentence patterns
+- Added saved, duplicate, and missing-expression feedback states
+
+This version turns daily sentence reading into reusable review material instead of leaving it as a one-off study page.
+
 ## Engineering Principles
 
 - Keep generated AI content structured and cached.
