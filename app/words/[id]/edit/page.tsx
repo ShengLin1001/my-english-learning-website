@@ -5,10 +5,18 @@ import { readData } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
 
-export default async function EditWordPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function EditWordPage({
+  params,
+  searchParams
+}: {
+  params: Promise<{ id: string }>;
+  searchParams?: Promise<{ duplicate?: string }>;
+}) {
   const data = await readData();
   const { id } = await params;
+  const query = searchParams ? await searchParams : {};
   const word = data.words.find((item) => item.id === id);
+  const duplicateWord = query.duplicate ? data.words.find((item) => item.id === query.duplicate) : undefined;
 
   if (!word) {
     notFound();
@@ -25,6 +33,12 @@ export default async function EditWordPage({ params }: { params: Promise<{ id: s
           Cancel
         </Link>
       </div>
+
+      {duplicateWord ? (
+        <div className="panel notice-panel">
+          <strong>Already in vocabulary:</strong> <Link href={`/words/${duplicateWord.id}`}>{duplicateWord.text}</Link>
+        </div>
+      ) : null}
 
       <form className="panel form" action={updateWord}>
         <input type="hidden" name="wordId" value={word.id} />

@@ -1,6 +1,10 @@
+export const dynamic = "force-dynamic";
+
 export default function SettingsPage() {
   const hasApiKey = Boolean(process.env.OPENAI_API_KEY);
   const model = process.env.OPENAI_MODEL || "gpt-5.2";
+  const databaseUrl = process.env.DATABASE_URL || "not configured";
+  const canBackupSqlite = databaseUrl.startsWith("file:");
 
   return (
     <div className="page">
@@ -23,7 +27,10 @@ export default function SettingsPage() {
         </div>
         <div className="panel">
           <h2>Data Storage</h2>
-          <p>The current version stores learning data in SQLite through Prisma. The local database file is `data/dev.db`.</p>
+          <p>The current version stores learning data in SQLite through Prisma. SQLite backup uses the `DATABASE_URL` file path.</p>
+          <div className="row">
+            <span className={canBackupSqlite ? "status" : "tag"}>{canBackupSqlite ? "SQLite backup available" : "SQLite file URL required"}</span>
+          </div>
           <div className="row">
             <a className="button secondary" href="/api/export">
               Export JSON

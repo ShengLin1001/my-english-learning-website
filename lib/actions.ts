@@ -176,7 +176,14 @@ export async function updateWord(formData: FormData) {
     redirect("/words");
   }
 
-  word.text = getString(formData, "text") || word.text;
+  const nextText = getString(formData, "text") || word.text;
+  const duplicate = data.words.find((item) => item.id !== wordId && item.text.toLowerCase() === nextText.toLowerCase());
+
+  if (duplicate) {
+    redirect(`/words/${wordId}/edit?duplicate=${encodeURIComponent(duplicate.id)}`);
+  }
+
+  word.text = nextText;
   word.phonetic = getString(formData, "phonetic");
   word.meaningZh = getString(formData, "meaningZh");
   word.definitionEn = getString(formData, "definitionEn");

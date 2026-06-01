@@ -638,6 +638,18 @@ The tenth version improves stability for daily use and future deployment:
 
 This version focuses on correctness and reliability rather than expanding the feature surface.
 
+## Implemented Eleventh Version
+
+The eleventh version closes remaining stability gaps:
+
+- Added duplicate-name checks when editing an existing word
+- Added edit-page feedback that links to the conflicting existing word
+- Made the settings page dynamic so AI and database status reflect runtime environment values
+- Updated SQLite backup to resolve the database file from `DATABASE_URL`
+- Added clearer backup errors when `DATABASE_URL` is not a SQLite file path or the file is missing
+
+This version makes word editing safer and reduces assumptions about local database paths.
+
 ## Engineering Principles
 
 - Keep generated AI content structured and cached.

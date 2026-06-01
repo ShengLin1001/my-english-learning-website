@@ -169,6 +169,8 @@ Download the local SQLite database:
 http://localhost:3000/api/backup/sqlite
 ```
 
+The SQLite backup endpoint resolves the database file from `DATABASE_URL`. It currently supports Prisma SQLite `file:` paths, such as `file:../data/dev.db`.
+
 Keep the development server bound to `127.0.0.1` when using backup endpoints so private learning data is not exposed to the local network.
 
 ## Development Plan
