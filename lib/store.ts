@@ -115,12 +115,19 @@ export async function readData(): Promise<AppData> {
 
 export async function seedDatabase() {
   await prisma.dailySentence.upsert({
-    where: { date: seedDailySentence.date },
+    where: { id: seedDailySentence.id },
     create: {
       ...seedDailySentence,
       keywords: stringifyList(seedDailySentence.keywords)
     },
-    update: {}
+    update: {
+      sentence: seedDailySentence.sentence,
+      translationZh: seedDailySentence.translationZh,
+      grammarNotes: seedDailySentence.grammarNotes,
+      keywords: stringifyList(seedDailySentence.keywords),
+      imitationPrompt: seedDailySentence.imitationPrompt,
+      date: seedDailySentence.date
+    }
   });
 
   await prisma.grammarExercise.upsert({

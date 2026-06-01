@@ -597,6 +597,21 @@ The seventh version improves dictionary import safety:
 
 This version reduces the risk of polluting the vocabulary library with malformed imports.
 
+## Implemented Eighth Version
+
+The eighth version improves the spaced-repetition review loop:
+
+- Rebuilt the review page around active recall before answer reveal
+- Added due-now, reviewed-today, and total-word metrics to the review session
+- Added a revealable answer panel with meaning, examples, and collocations
+- Added rating cards that explain the next review interval
+- Improved review feedback to include schedule, example, collocation, and recall-note hints
+- Added upcoming review scheduling to the review page
+- Added per-word review schedule, review count, latest rating, and rating distribution to word detail pages
+- Added recent review notes to each word detail page
+
+This version makes review more learning-oriented by helping the user compare recall against context and see how each word is progressing over time.
+
 ## Engineering Principles
 
 - Keep generated AI content structured and cached.

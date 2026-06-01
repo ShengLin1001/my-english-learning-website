@@ -12,6 +12,13 @@ export default async function WordDetailPage({ params }: { params: Promise<{ id:
     notFound();
   }
 
+  const reviews = data.reviews.filter((review) => review.wordId === word.id);
+  const latestReview = reviews[0];
+  const ratingCounts = ["unfamiliar", "vague", "familiar", "mastered"].map((rating) => ({
+    rating,
+    count: reviews.filter((review) => review.rating === rating).length
+  }));
+
   return (
     <div className="page">
       <div className="page-header">
@@ -75,6 +82,55 @@ export default async function WordDetailPage({ params }: { params: Promise<{ id:
         </div>
       </section>
 
+      <section className="grid grid-2" style={{ marginTop: 16 }}>
+        <div className="panel">
+          <h2>Review Schedule</h2>
+          <div className="progress-list">
+            <div className="progress-row">
+              <span>Next review</span>
+              <strong>{formatDate(word.nextReviewAt)}</strong>
+            </div>
+            <div className="progress-row">
+              <span>Total reviews</span>
+              <strong>{reviews.length}</strong>
+            </div>
+            <div className="progress-row">
+              <span>Latest rating</span>
+              <strong>{latestReview?.rating ?? "none"}</strong>
+            </div>
+          </div>
+        </div>
+        <div className="panel">
+          <h2>Review Pattern</h2>
+          <div className="progress-list">
+            {ratingCounts.map((item) => (
+              <div className="progress-row" key={item.rating}>
+                <span>{item.rating}</span>
+                <strong>{item.count}</strong>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {reviews.length ? (
+        <section className="panel" style={{ marginTop: 16 }}>
+          <h2>Recent Review Notes</h2>
+          <div className="preview-list">
+            {reviews.slice(0, 5).map((review) => (
+              <div className="preview-row" key={review.id}>
+                <div>
+                  <strong>{review.rating}</strong>
+                  <p>{review.feedback}</p>
+                  <p className="muted">{review.userAnswer || "No recall note recorded."}</p>
+                </div>
+                <span className="status">{formatDate(review.reviewedAt)}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       <div className="row" style={{ marginTop: 16 }}>
         <Link className="button secondary" href="/words">
           Back to Library
@@ -91,4 +147,13 @@ export default async function WordDetailPage({ params }: { params: Promise<{ id:
       </div>
     </div>
   );
+}
+
+function formatDate(value: string) {
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  }).format(new Date(value));
 }

@@ -217,7 +217,7 @@ export async function reviewWord(formData: FormData) {
     wordId,
     rating,
     userAnswer,
-    feedback: buildReviewFeedback(word.text, rating),
+    feedback: buildReviewFeedback(word, rating, userAnswer),
     reviewedAt: now
   };
 
@@ -228,11 +228,18 @@ export async function reviewWord(formData: FormData) {
   redirect("/review");
 }
 
-function buildReviewFeedback(word: string, rating: WordStatus) {
-  if (rating === "mastered") return `${word} can move to a longer review interval.`;
-  if (rating === "familiar") return `${word} is becoming stable. Review it again in context.`;
-  if (rating === "vague") return `Use ${word} in one original sentence before the next review.`;
-  return `Return to ${word} soon with examples and collocations.`;
+function buildReviewFeedback(word: Word, rating: WordStatus, userAnswer: string) {
+  const nextInterval = { unfamiliar: "later today", vague: "tomorrow", familiar: "in three days", mastered: "in seven days", new: "later today" }[
+    rating
+  ];
+  const examplesHint = word.examples[0] ? ` Revisit this example: "${word.examples[0]}"` : "";
+  const collocationHint = word.collocations[0] ? ` Anchor it with: ${word.collocations[0]}.` : "";
+  const recallHint = userAnswer ? "Your recall note was saved for later comparison." : "Next time, write a short recall note before rating the word.";
+
+  if (rating === "mastered") return `${word.text} is scheduled ${nextInterval}. Use it in one academic sentence to keep it active. ${recallHint}`;
+  if (rating === "familiar") return `${word.text} is becoming stable and is scheduled ${nextInterval}.${collocationHint} ${recallHint}`;
+  if (rating === "vague") return `${word.text} is scheduled ${nextInterval}. Focus on meaning plus one context.${examplesHint} ${recallHint}`;
+  return `${word.text} stays in today's queue. Review the definition, examples, and collocations before rating it again.${examplesHint} ${recallHint}`;
 }
 
 export async function addGrammarExercise() {
