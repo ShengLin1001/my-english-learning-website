@@ -1,6 +1,8 @@
 import { readData } from "@/lib/store";
 import { ImportPreview } from "./import-preview";
 
+export const dynamic = "force-dynamic";
+
 export default async function ImportWordsPage({ searchParams }: { searchParams?: Promise<{ error?: string }> }) {
   const params = searchParams ? await searchParams : {};
   const data = await readData();

@@ -2,6 +2,8 @@ import { submitListeningPractice } from "@/lib/actions";
 import { readData } from "@/lib/store";
 import { ListeningControls } from "./listening-client";
 
+export const dynamic = "force-dynamic";
+
 export default async function ListeningPage() {
   const data = await readData();
   const sourceText =

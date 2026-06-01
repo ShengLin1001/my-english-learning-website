@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { updateWord } from "@/lib/actions";
 import { readData } from "@/lib/store";
 
+export const dynamic = "force-dynamic";
+
 export default async function EditWordPage({ params }: { params: Promise<{ id: string }> }) {
   const data = await readData();
   const { id } = await params;

@@ -120,14 +120,7 @@ export async function seedDatabase() {
       ...seedDailySentence,
       keywords: stringifyList(seedDailySentence.keywords)
     },
-    update: {
-      sentence: seedDailySentence.sentence,
-      translationZh: seedDailySentence.translationZh,
-      grammarNotes: seedDailySentence.grammarNotes,
-      keywords: stringifyList(seedDailySentence.keywords),
-      imitationPrompt: seedDailySentence.imitationPrompt,
-      date: seedDailySentence.date
-    }
+    update: {}
   });
 
   await prisma.grammarExercise.upsert({

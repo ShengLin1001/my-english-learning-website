@@ -2,6 +2,8 @@ import Link from "next/link";
 import { readData } from "@/lib/store";
 import { WordStatus } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
 type WordsSearchParams = {
   imported?: string;
   skipped?: string;

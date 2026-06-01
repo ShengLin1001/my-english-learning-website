@@ -626,6 +626,18 @@ The ninth version connects daily sentence study to the vocabulary library:
 
 This version turns daily sentence reading into reusable review material instead of leaving it as a one-off study page.
 
+## Implemented Tenth Version
+
+The tenth version improves stability for daily use and future deployment:
+
+- Marked database-backed pages as dynamic so production builds do not freeze learning data at build time
+- Changed seed data behavior so ordinary reads no longer overwrite the seeded daily sentence
+- Added duplicate checks to manual word creation before writing to the database
+- Added friendly duplicate and missing-word feedback on the add-word page
+- Kept the current Prisma schema unchanged
+
+This version focuses on correctness and reliability rather than expanding the feature surface.
+
 ## Engineering Principles
 
 - Keep generated AI content structured and cached.

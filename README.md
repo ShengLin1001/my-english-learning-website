@@ -193,11 +193,12 @@ Grammar training and listening practice can be added after the vocabulary and re
 
 ## Near-Term Roadmap
 
-The next recommended version is the data-layer upgrade:
+The next recommended versions should focus on editing and managing learning records:
 
 - Add user-visible AI error/status messages
-- Add richer review analytics and progress charts
 - Add editable daily sentence and grammar exercise history management
+- Add richer review analytics and progress charts
+- Add deletion or archiving for writing, grammar, and listening records
 
 ## Repository Notes
 

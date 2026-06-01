@@ -29,6 +29,13 @@ export async function addWord(formData: FormData) {
     redirect("/words/new?error=missing-word");
   }
 
+  const data = await readData();
+  const existing = data.words.find((word) => word.text.toLowerCase() === text.toLowerCase());
+
+  if (existing) {
+    redirect(`/words/new?duplicate=${encodeURIComponent(existing.id)}`);
+  }
+
   const now = new Date().toISOString();
 
   const word: Word = {

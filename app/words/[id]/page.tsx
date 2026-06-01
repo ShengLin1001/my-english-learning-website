@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { deleteWord, enrichWord } from "@/lib/actions";
 import { readData } from "@/lib/store";
 
+export const dynamic = "force-dynamic";
+
 export default async function WordDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const data = await readData();
   const { id } = await params;

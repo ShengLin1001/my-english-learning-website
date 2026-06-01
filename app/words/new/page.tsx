@@ -1,6 +1,18 @@
+import Link from "next/link";
 import { addWord } from "@/lib/actions";
+import { readData } from "@/lib/store";
 
-export default function NewWordPage() {
+export const dynamic = "force-dynamic";
+
+export default async function NewWordPage({
+  searchParams
+}: {
+  searchParams?: Promise<{ duplicate?: string; error?: string }>;
+}) {
+  const params = searchParams ? await searchParams : {};
+  const data = await readData();
+  const duplicateWord = params.duplicate ? data.words.find((word) => word.id === params.duplicate) : undefined;
+
   return (
     <div className="page">
       <div className="page-header">
@@ -9,6 +21,18 @@ export default function NewWordPage() {
           <p>Add unfamiliar words from reading, writing, listening, or daily study.</p>
         </div>
       </div>
+
+      {params.error === "missing-word" ? (
+        <div className="panel notice-panel">
+          <strong>Word is required.</strong> Add a word or phrase before saving.
+        </div>
+      ) : null}
+
+      {duplicateWord ? (
+        <div className="panel notice-panel">
+          <strong>Already in vocabulary:</strong> <Link href={`/words/${duplicateWord.id}`}>{duplicateWord.text}</Link>
+        </div>
+      ) : null}
 
       <form className="panel form" action={addWord}>
         <label>

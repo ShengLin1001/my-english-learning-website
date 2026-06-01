@@ -3,6 +3,8 @@ import { reviewWord } from "@/lib/actions";
 import { readData } from "@/lib/store";
 import { WordStatus } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
 const ratings: Array<[WordStatus, string, string]> = [
   ["unfamiliar", "Again", "I could not recall the meaning or usage."],
   ["vague", "Vague", "I recognized it, but the usage is not stable."],
