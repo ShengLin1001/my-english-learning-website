@@ -650,6 +650,20 @@ The eleventh version closes remaining stability gaps:
 
 This version makes word editing safer and reduces assumptions about local database paths.
 
+## Implemented Twelfth Version
+
+The twelfth version adds DeepSeek as an AI provider:
+
+- Added `AI_PROVIDER` switching between OpenAI and DeepSeek
+- Kept the existing OpenAI Responses API integration
+- Added DeepSeek Chat Completions integration with JSON output mode
+- Added DeepSeek environment variables to `.env.example`
+- Updated settings to display the active provider and model
+- Updated README setup instructions for OpenAI and DeepSeek
+- Stored the real DeepSeek key only in local ignored `.env`
+
+This version lets the same learning features run through either OpenAI or DeepSeek while keeping fallback behavior when credentials are missing.
+
 ## Engineering Principles
 
 - Keep generated AI content structured and cached.

@@ -39,14 +39,26 @@ The first version should work locally and remain usable even when AI credentials
 
 ## AI Setup
 
-AI calls are made from server actions through the OpenAI Responses API. Configure these values in `.env` or `.env.local`:
+AI calls are made from server actions. The app supports OpenAI and DeepSeek providers. Configure these values in `.env` or `.env.local`.
+
+OpenAI:
 
 ```text
+AI_PROVIDER=openai
 OPENAI_API_KEY=your_api_key_here
 OPENAI_MODEL=gpt-5.2
 ```
 
-If `OPENAI_API_KEY` is missing, the app keeps working and saves fallback learning content instead of calling the API.
+DeepSeek:
+
+```text
+AI_PROVIDER=deepseek
+DEEPSEEK_API_KEY=your_api_key_here
+DEEPSEEK_BASE_URL=https://api.deepseek.com
+DEEPSEEK_MODEL=deepseek-v4-pro
+```
+
+If the selected provider API key is missing, the app keeps working and saves fallback learning content instead of calling the API. Keep real API keys out of Git.
 
 ## Current MVP Status
 

@@ -1,8 +1,9 @@
 export const dynamic = "force-dynamic";
 
 export default function SettingsPage() {
-  const hasApiKey = Boolean(process.env.OPENAI_API_KEY);
-  const model = process.env.OPENAI_MODEL || "gpt-5.2";
+  const provider = process.env.AI_PROVIDER || (process.env.DEEPSEEK_API_KEY ? "deepseek" : "openai");
+  const model = provider === "deepseek" ? process.env.DEEPSEEK_MODEL || "deepseek-v4-pro" : process.env.OPENAI_MODEL || "gpt-5.2";
+  const hasApiKey = provider === "deepseek" ? Boolean(process.env.DEEPSEEK_API_KEY) : Boolean(process.env.OPENAI_API_KEY);
   const databaseUrl = process.env.DATABASE_URL || "not configured";
   const canBackupSqlite = databaseUrl.startsWith("file:");
 
@@ -18,10 +19,11 @@ export default function SettingsPage() {
       <section className="grid grid-2">
         <div className="panel">
           <h2>AI Configuration</h2>
-          <p>Configure `OPENAI_API_KEY` and optional `OPENAI_MODEL` in `.env` or `.env.local`. AI requests run only on the server side.</p>
-          <p>Without an API key, word enrichment and writing feedback use deterministic fallback content.</p>
+          <p>Configure `AI_PROVIDER` with either OpenAI or DeepSeek credentials in `.env` or `.env.local`. AI requests run only on the server side.</p>
+          <p>Without a provider API key, AI features use deterministic fallback content.</p>
           <div className="row">
             <span className={hasApiKey ? "status" : "tag"}>{hasApiKey ? "AI enabled" : "Fallback mode"}</span>
+            <span className="status">{provider}</span>
             <span className="status">{model}</span>
           </div>
         </div>

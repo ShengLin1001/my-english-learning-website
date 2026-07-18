@@ -175,6 +175,26 @@ async function callResponsesJson<T>({
   instructions: string;
   input: string;
 }): Promise<T> {
+  const provider = process.env.AI_PROVIDER || (process.env.DEEPSEEK_API_KEY ? "deepseek" : "openai");
+
+  if (provider === "deepseek") {
+    return callDeepSeekJson({ schema, fallback, instructions, input });
+  }
+
+  return callOpenAIResponsesJson({ schema, fallback, instructions, input });
+}
+
+async function callOpenAIResponsesJson<T>({
+  schema,
+  fallback,
+  instructions,
+  input
+}: {
+  schema: JsonSchema;
+  fallback: T;
+  instructions: string;
+  input: string;
+}): Promise<T> {
   const apiKey = process.env.OPENAI_API_KEY;
 
   if (!apiKey) {
@@ -224,6 +244,92 @@ async function callResponsesJson<T>({
   } catch {
     return fallback;
   }
+}
+
+async function callDeepSeekJson<T>({
+  schema,
+  fallback,
+  instructions,
+  input
+}: {
+  schema: JsonSchema;
+  fallback: T;
+  instructions: string;
+  input: string;
+}): Promise<T> {
+  const apiKey = process.env.DEEPSEEK_API_KEY;
+
+  if (!apiKey) {
+    return fallback;
+  }
+
+  const baseUrl = process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com";
+  const model = process.env.DEEPSEEK_MODEL || "deepseek-v4-pro";
+  const jsonExample = buildJsonExample(schema.schema);
+
+  try {
+    const response = await fetch(`${baseUrl.replace(/\/$/, "")}/chat/completions`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          {
+            role: "system",
+            content: [
+              instructions,
+              "Return valid JSON only. Do not include Markdown fences or explanatory text.",
+              `The JSON object must match this example shape: ${JSON.stringify(jsonExample)}`
+            ].join("\n")
+          },
+          {
+            role: "user",
+            content: `${input}\n\nReturn the answer as JSON.`
+          }
+        ],
+        response_format: { type: "json_object" },
+        stream: false
+      })
+    });
+
+    if (!response.ok) {
+      return fallback;
+    }
+
+    const payload = (await response.json()) as {
+      choices?: Array<{ message?: { content?: string } }>;
+    };
+    const content = payload.choices?.[0]?.message?.content;
+
+    if (!content) {
+      return fallback;
+    }
+
+    return JSON.parse(content) as T;
+  } catch {
+    return fallback;
+  }
+}
+
+function buildJsonExample(schema: Record<string, unknown>) {
+  const properties = schema.properties;
+
+  if (!properties || typeof properties !== "object" || Array.isArray(properties)) {
+    return {};
+  }
+
+  return Object.fromEntries(
+    Object.entries(properties as Record<string, { type?: string; items?: unknown }>).map(([key, value]) => {
+      if (value.type === "array") {
+        return [key, [`${key} example`]];
+      }
+
+      return [key, `${key} example`];
+    })
+  );
 }
 
 function fallbackWordContent(word: Word): WordLearningContent {
