@@ -8,7 +8,7 @@ This file separates the pre-existing application from work created during the Op
 - Track: Education
 - Build branch: `build-week-2026`
 - Submission period: July 13, 2026 at 9:00 AM PT through July 21, 2026 at 5:00 PM PT
-- Live demo: `PENDING`
+- Live demo: https://researchloop-production.up.railway.app
 - Public YouTube demo: `PENDING`
 - Primary Codex `/feedback` Session ID: `PENDING`
 
@@ -43,6 +43,7 @@ Release preparation adds a synthetic one-click example, explicit live-AI/fallbac
 | Writing-to-practice flow, focused review, and dashboard | `3794229` | Browser judge path through 25% session progress |
 | Provider-neutral public demo protection | `6d259ef` | HTTP Basic Auth challenge and success checks |
 | Submission, deployment, license, and data-boundary docs | `792751a` | Repository diff and release-document review |
+| Persistent Railway runtime | `00a35d9` | One replica, `/data` volume, production schema sync and start |
 
 ## Codex Collaboration
 
@@ -64,10 +65,10 @@ Update this table with the final UTC timestamp and result for each release candi
 | --- | --- | --- |
 | `npm run typecheck` | PASS | `2026-07-18T08:40:56Z` |
 | `npm run build` | PASS, Next.js 15.5.18 production build | `2026-07-18T08:40:56Z` |
-| Live AI judge quick path | PASS, 4 diagnostics, 4 cards, 2 exercises, review progress 1/4 | `2026-07-18T08:40:56Z` |
+| Live AI judge quick path | PASS on Railway, 4 diagnostics, 4 cards, 2 exercises, review progress 1/4 | `2026-07-18T09:04:27Z` |
 | No-key fallback judge quick path | PASS, visible fallback status, 3 cards, 2 exercises | `2026-07-18T08:40:56Z` |
-| Demo authentication challenge and success | PASS, unauthenticated 401 and authenticated 200 | `2026-07-18T08:40:56Z` |
-| Synthetic demo data only | PASS, original sample in isolated disposable SQLite database | `2026-07-18T08:40:56Z` |
+| Demo authentication challenge and success | PASS on Railway, unauthenticated 401 and authenticated 200 | `2026-07-18T09:04:27Z` |
+| Synthetic demo data only | PASS, original sample in persistent hosted SQLite database | `2026-07-18T09:04:27Z` |
 
 ## Third-party and Data Disclosure
 
@@ -80,7 +81,7 @@ Update this table with the final UTC timestamp and result for each release candi
 ## Final Submission Checklist
 
 - [ ] Replace all `PENDING` evidence fields.
-- [ ] Add repository description, homepage, and live demo URL.
+- [x] Add repository description, homepage, and live demo URL.
 - [ ] Keep the hosted demo available through the judging period.
 - [ ] Provide private demo credentials in the testing instructions.
 - [ ] Record a public YouTube video under three minutes with English narration or an English translation.

@@ -6,6 +6,8 @@ The project is a single-user learning tool rather than a general writing chatbot
 
 ## Judge Quick Path
 
+Live demo: [researchloop-production.up.railway.app](https://researchloop-production.up.railway.app). Credentials are supplied privately in the submission testing instructions.
+
 1. Open `/writing?demo=1`, then submit the original research-English sample.
 2. Review the categorized edits and start the generated three-minute practice.
 3. Return to `/` to see that session's issues, cards, exercises, and review progress together.

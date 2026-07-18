@@ -7,7 +7,7 @@ Use this copy as the source of truth for the Devpost page and public demo. Repla
 - Project name: ResearchLoop
 - Track: Education
 - Repository: https://github.com/ShengLin1001/my-english-learning-website
-- Live demo: `REPLACE_WITH_LIVE_URL`
+- Live demo: https://researchloop-production.up.railway.app
 - Public video: `REPLACE_WITH_YOUTUBE_URL`
 - Primary Codex Session ID: `REPLACE_WITH_FEEDBACK_SESSION_ID`
 
