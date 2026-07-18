@@ -1,219 +1,105 @@
-# My English Learning Website
+# ResearchLoop
 
-A personal AI-assisted English learning website for vocabulary growth, sentence learning, grammar training, academic writing improvement, and listening practice.
+ResearchLoop turns one paragraph of research English into a short learning loop: explain the important edits, generate targeted vocabulary and grammar practice, review it, and show the result on a dashboard.
 
-The goal is to build a practical learning system that helps the user understand English through context, feedback, and repeated use instead of rote memorization.
+The project is a single-user learning tool rather than a general writing chatbot. Its main goal is to help researchers reuse feedback instead of reading a polished paragraph once and forgetting it.
 
-## Planned Features
+## Judge Quick Path
 
-- Import a dictionary or word list as the main learning content
-- Add unfamiliar words encountered during daily study
-- Review words with a spaced repetition workflow
-- Study one classic English sentence each day
-- Train grammar with immediate tests and feedback
-- Generate AI-assisted word explanations, example sentences, collocations, and academic usage notes
-- Improve scientific paper writing through academic English polishing and reusable sentence patterns
-- Improve listening through generated or browser-read audio with active feedback
+1. Open `/writing?demo=1`, then submit the original research-English sample.
+2. Review the categorized edits and start the generated three-minute practice.
+3. Return to `/` to see that session's issues, cards, exercises, and review progress together.
 
-## Product Direction
+The app remains usable without an AI credential by returning clearly labelled deterministic fallback content.
 
-This project should become a personal English learning system with these core ideas:
+## What the Loop Produces
 
-- Learn words in context, not as isolated translations
-- Use examples and collocations to build language sense
-- Review based on familiarity and mistakes
-- Turn daily reading and research writing into learning material
-- Use AI as a tutor, not as a replacement for active practice
+- A polished paragraph and concise revision rationale
+- Diagnostics grouped by clarity, grammar, precision, and concision
+- Session-linked vocabulary cards and grammar exercises
+- A focused review route for the current writing session
+- Dashboard progress that connects feedback to later practice
 
-## Recommended Stack
+Vocabulary import, daily sentences, standalone grammar practice, listening practice, JSON export, and SQLite backup remain available as supporting tools.
 
-The repository is currently planned around:
+## Architecture
 
-- Next.js
-- TypeScript
-- Prisma
-- SQLite
-- Server-side AI API routes
+- Next.js 15 and React 19
+- TypeScript server components and server actions
+- Prisma with a local SQLite database
+- Server-side, configurable AI provider with structured JSON validation
+- No client-side API credentials and no required external database
 
-The first version should work locally and remain usable even when AI credentials are not configured.
+AI vendor and model names are intentionally not part of the learner-facing product identity. The interface reports only whether live AI or local fallback content produced a session.
 
-## AI Setup
+## Local Setup
 
-AI calls are made from server actions. The app supports OpenAI and DeepSeek providers. Configure these values in `.env` or `.env.local`.
-
-OpenAI:
-
-```text
-AI_PROVIDER=openai
-OPENAI_API_KEY=your_api_key_here
-OPENAI_MODEL=gpt-5.2
-```
-
-DeepSeek:
-
-```text
-AI_PROVIDER=deepseek
-DEEPSEEK_API_KEY=your_api_key_here
-DEEPSEEK_BASE_URL=https://api.deepseek.com
-DEEPSEEK_MODEL=deepseek-v4-pro
-```
-
-If the selected provider API key is missing, the app keeps working and saves fallback learning content instead of calling the API. Keep real API keys out of Git.
-
-## Current MVP Status
-
-The current runnable version includes:
-
-- Dashboard
-- Learning progress analytics
-- Vocabulary library
-- Manual word creation
-- CSV, JSON, and TXT word import
-- Import preview with duplicate and invalid-row detection
-- Word detail page
-- Word editing
-- Single-word deletion with related review cleanup
-- Vocabulary search
-- Status and tag filters
-- Word tags
-- Import duplicate and invalid-row summary
-- Placeholder AI word enrichment saved to local data
-- Spaced repetition review flow
-- Daily sentence page
-- Grammar exercise page
-- Academic writing practice page
-- Listening practice with browser speech synthesis
-- Settings page
-- JSON export and SQLite database backup downloads
-
-Learning data is stored in a local SQLite database at `data/dev.db`, which is ignored by Git.
-
-## Local Development
-
-This project is usually opened from either PowerShell or Git Bash on Windows. Use the command style that matches the terminal you are currently using.
-
-### PowerShell
-
-Install dependencies:
+Prerequisites: Node.js 20 or newer and npm.
 
 ```powershell
-$env:npm_config_cache='F:\BaiduSyncdisk\version20240608\main_code_space\my-english-learning-website\.npm-cache'
-& 'C:\Program Files\nodejs\npm.cmd' install
+git clone https://github.com/ShengLin1001/my-english-learning-website.git
+cd my-english-learning-website
+Copy-Item .env.example .env
+npm ci
+npm run db:generate
+npm run db:push
+npm run dev
 ```
 
-Start the development server:
+Open `http://localhost:3000`. The default SQLite path in `.env.example` is relative to `prisma/schema.prisma` and resolves to `data/dev.db`.
+
+To use live AI feedback, select a supported provider and set its server-side API key in `.env`. Model override variables are optional. If no valid key is configured, the app uses fallback content and still saves the learning session.
+
+## Demo Access Protection
+
+The repository includes optional HTTP Basic authentication for a hosted demo. It activates only when both variables are non-empty:
+
+```text
+DEMO_USER=judge
+DEMO_PASSWORD=use-a-long-random-password
+```
+
+If either value is missing, authentication is disabled for local development. A hosted instance should use synthetic data only, because authenticated users can create learning records and use the export and backup endpoints.
+
+## Minimal Persistent Deployment
+
+ResearchLoop needs one writable, persistent filesystem because SQLite is a local file. A minimal Railway-style deployment is:
+
+1. Deploy this GitHub repository as one service.
+2. Attach one persistent volume at `/data`.
+3. Set `DATABASE_URL=file:/data/demo.db` and configure the AI and demo-auth variables.
+4. Use `npm run build` as the build command.
+5. Use `npm run db:push && npm start` as the start command.
+6. Keep one replica; a SQLite volume cannot be shared safely across replicas.
+
+Do not upload a personal `data/dev.db`. Create the public demo from synthetic material, and keep the service available through the judging period.
+
+## Data Import and Ownership
+
+The import screen accepts CSV, JSON, and TXT vocabulary data. No third-party word list is distributed with this repository. Users are responsible for supplying data they are authorized to use; see [`wordlists/README.md`](./wordlists/README.md).
+
+## OpenAI Build Week 2026
+
+This repository existed before the event. The eligible submission work is the ResearchLoop extension developed on the `build-week-2026` branch after the submission period began. [`BUILD_WEEK.md`](./BUILD_WEEK.md) separates the pre-existing baseline from the new product flow and provides slots for commit, verification, demo, and primary Codex session evidence.
+
+Codex was used as the primary engineering environment to inspect the existing application, define the smallest coherent learning loop, coordinate implementation work, review deployment and data-safety constraints, and run the final checks. The deployed learning feedback provider remains configurable; the product is evaluated as a tool and workflow rather than as a model showcase.
+
+## Verification
 
 ```powershell
-$env:npm_config_cache='F:\BaiduSyncdisk\version20240608\main_code_space\my-english-learning-website\.npm-cache'
-& 'C:\Program Files\nodejs\npm.cmd' run dev
+npm run typecheck
+npm run build
 ```
 
-Open:
+For a release candidate, also complete the judge quick path with both live AI and fallback mode before recording the demo.
 
-```text
-http://localhost:3000
-```
+## Known Limits
 
-### Git Bash / MINGW64
+- Single-user and single-instance by design
+- SQLite is suitable for the local tool and event demo, not horizontal scaling
+- Shared demo credentials protect the instance but are not a multi-user account system
+- AI feedback should be reviewed before reuse in a manuscript
 
-Install dependencies:
+## License
 
-```bash
-export npm_config_cache="/f/BaiduSyncdisk/version20240608/main_code_space/my-english-learning-website/.npm-cache"
-"/c/Program Files/nodejs/npm.cmd" install
-```
-
-Start the development server:
-
-```bash
-export npm_config_cache="/f/BaiduSyncdisk/version20240608/main_code_space/my-english-learning-website/.npm-cache"
-"/c/Program Files/nodejs/npm.cmd" run dev -- --hostname 127.0.0.1 --port 3000
-```
-
-Open:
-
-```text
-http://localhost:3000
-```
-
-Do not use PowerShell syntax such as `$env:npm_config_cache=...` or `& 'C:\Program Files\nodejs\npm.cmd' ...` inside Git Bash.
-
-## Database Setup
-
-The project uses Prisma with SQLite. The local `.env` file should contain:
-
-```text
-DATABASE_URL="file:../data/dev.db"
-```
-
-Generate the Prisma client:
-
-```powershell
-$env:npm_config_cache='F:\BaiduSyncdisk\version20240608\main_code_space\my-english-learning-website\.npm-cache'
-& 'C:\Program Files\nodejs\npm.cmd' run db:generate
-```
-
-Create or update the local SQLite schema:
-
-```powershell
-$env:npm_config_cache='F:\BaiduSyncdisk\version20240608\main_code_space\my-english-learning-website\.npm-cache'
-& 'C:\Program Files\nodejs\npm.cmd' run db:push
-```
-
-If older JSON data exists in `data/app-data.json`, migrate it into SQLite:
-
-```powershell
-$env:npm_config_cache='F:\BaiduSyncdisk\version20240608\main_code_space\my-english-learning-website\.npm-cache'
-& 'C:\Program Files\nodejs\npm.cmd' run db:migrate-json
-```
-
-## Data Export and Backup
-
-Download a portable JSON export:
-
-```text
-http://localhost:3000/api/export
-```
-
-Download the local SQLite database:
-
-```text
-http://localhost:3000/api/backup/sqlite
-```
-
-The SQLite backup endpoint resolves the database file from `DATABASE_URL`. It currently supports Prisma SQLite `file:` paths, such as `file:../data/dev.db`.
-
-Keep the development server bound to `127.0.0.1` when using backup endpoints so private learning data is not exposed to the local network.
-
-## Development Plan
-
-See [DEVELOPMENTS.md](./DEVELOPMENTS.md) for the detailed implementation roadmap, proposed data models, routes, MVP scope, and engineering risks.
-
-## Initial MVP
-
-The first version includes:
-
-- Project foundation
-- Vocabulary library
-- Manual word creation
-- Dictionary import
-- Word detail page
-- Simple spaced repetition review
-- Daily sentence page
-- Placeholder AI word enrichment
-- Academic writing coach
-
-Grammar training and listening practice can be added after the vocabulary and review foundation is stable.
-
-## Near-Term Roadmap
-
-The next recommended versions should focus on editing and managing learning records:
-
-- Add user-visible AI error/status messages
-- Add editable daily sentence and grammar exercise history management
-- Add richer review analytics and progress charts
-- Add deletion or archiving for writing, grammar, and listening records
-
-## Repository Notes
-
-Future Codex work should follow [AGENTS.md](./AGENTS.md), especially the file deletion safety rules, UTF-8 encoding requirement, Python environment notes, and commit-message workflow.
+MIT. See [`LICENSE`](./LICENSE).
