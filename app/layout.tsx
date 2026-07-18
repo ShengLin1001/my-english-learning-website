@@ -3,17 +3,20 @@ import Link from "next/link";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "My English Learning Website",
-  description: "A personal AI-assisted English learning website."
+  title: {
+    default: "ResearchLoop",
+    template: "%s · ResearchLoop"
+  },
+  description: "Turn research-writing feedback into vocabulary, grammar practice, and spaced review."
 };
 
 const navItems = [
-  ["/", "学习仪表盘"],
-  ["/words", "词库"],
+  ["/", "闭环仪表盘"],
+  ["/writing", "科研英语闭环"],
   ["/review", "今日复习"],
-  ["/daily", "每日一句"],
+  ["/words", "词库"],
   ["/grammar", "语法训练"],
-  ["/writing", "科研写作"],
+  ["/daily", "每日一句"],
   ["/listening", "听力训练"],
   ["/settings", "设置"]
 ];
@@ -24,8 +27,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <div className="shell">
           <aside className="sidebar">
-            <div className="brand">English Learning<br />Workspace</div>
-            <nav className="nav">
+            <Link className="brand" href="/">
+              ResearchLoop
+              <span>科研英语学习闭环</span>
+            </Link>
+            <nav className="nav" aria-label="主要导航">
               {navItems.map(([href, label]) => (
                 <Link href={href} key={href}>
                   {label}

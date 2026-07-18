@@ -6,113 +6,126 @@ export const dynamic = "force-dynamic";
 export default async function DashboardPage() {
   const data = await readData();
   const now = new Date().toISOString();
+  const latestSession = data.writingPractices[0];
+  const sessionTag = latestSession ? `coach-session:${latestSession.id}` : "";
+  const sessionWords = sessionTag ? data.words.filter((word) => word.tags.includes(sessionTag)) : [];
+  const sessionExercises = latestSession
+    ? data.grammarExercises.filter((exercise) => exercise.sessionId === latestSession.id)
+    : [];
+  const sessionWordIds = new Set(sessionWords.map((word) => word.id));
+  const reviewedSessionWordIds = new Set(
+    data.reviews
+      .filter((review) => sessionWordIds.has(review.wordId) && review.reviewedAt >= (latestSession?.createdAt ?? ""))
+      .map((review) => review.wordId)
+  );
   const dueWords = data.words.filter((word) => word.nextReviewAt <= now);
-  const mastered = data.words.filter((word) => word.status === "mastered");
   const reviewedToday = data.reviews.filter((review) => review.reviewedAt.slice(0, 10) === now.slice(0, 10));
-  const daily = data.dailySentences[0];
-  const masteryRate = data.words.length ? Math.round((mastered.length / data.words.length) * 100) : 0;
-  const statusCounts = ["new", "unfamiliar", "vague", "familiar", "mastered"].map((status) => ({
-    status,
-    count: data.words.filter((word) => word.status === status).length
-  }));
+  const diagnostics = latestSession?.diagnostics ?? [];
+  const practiceTotal = sessionWords.length;
+  const practiceDone = reviewedSessionWordIds.size;
+  const progress = practiceTotal ? Math.min(100, Math.round((practiceDone / practiceTotal) * 100)) : 0;
+  const sessionHref = latestSession ? `/writing?session=${encodeURIComponent(latestSession.id)}` : "/writing";
 
   return (
     <div className="page">
-      <div className="page-header">
+      <header className="page-header dashboard-header">
         <div>
-          <h1>Learning Dashboard</h1>
-          <p>Track vocabulary, reviews, AI practice, and daily learning progress from one place.</p>
+          <p className="eyebrow">ResearchLoop dashboard</p>
+          <h1>把科研英文反馈练到会用</h1>
+          <p>从论文草稿出发，追踪一次反馈如何变成词卡、语法练习和长期记忆。</p>
         </div>
-        <Link className="button" href="/words/new">
-          Add Word
+        <Link className="button" href="/writing">
+          分析新段落
         </Link>
-      </div>
+      </header>
 
-      <section className="grid grid-3">
-        <div className="panel">
-          <div className="metric">{data.words.length}</div>
-          <p>Vocabulary words</p>
-        </div>
-        <div className="panel">
+      {latestSession ? (
+        <section className="panel session-overview" aria-labelledby="latest-session-title">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">Latest session · 最近闭环</p>
+              <h2 id="latest-session-title">{latestSession.context} · {formatDate(latestSession.createdAt)}</h2>
+            </div>
+            <span className={latestSession.sourceStatus === "fallback" ? "tag" : "status"}>
+              {latestSession.sourceStatus === "fallback" ? "Fallback mode" : "AI enabled"}
+            </span>
+          </div>
+
+          <p className="session-excerpt">{latestSession.polishedText}</p>
+          <div className="grid grid-3 session-metrics">
+            <div>
+              <strong>{diagnostics.length}</strong>
+              <span>个表达问题</span>
+            </div>
+            <div>
+              <strong>{sessionWords.length}</strong>
+              <span>张专属词卡</span>
+            </div>
+            <div>
+              <strong>{sessionExercises.length}</strong>
+              <span>道语法练习</span>
+            </div>
+          </div>
+
+          <div className="progress-block" aria-label={`词卡复习进度 ${progress}%`}>
+            <div className="progress-copy">
+              <span>词卡复习进度</span>
+              <strong>{practiceDone}/{practiceTotal}</strong>
+            </div>
+            <div className="progress-track"><span style={{ width: `${progress}%` }} /></div>
+          </div>
+
+          <div className="row">
+            <Link className="button warm" href={`/review?session=${encodeURIComponent(latestSession.id)}`}>
+              {practiceDone ? "继续本次练习" : "开始 3 分钟练习"}
+            </Link>
+            <Link className="text-link" href={sessionHref}>查看反馈详情</Link>
+          </div>
+        </section>
+      ) : (
+        <section className="coach-hero first-loop">
+          <div>
+            <p className="eyebrow">Start here · 从这里开始</p>
+            <h2>还没有 ResearchLoop session</h2>
+            <p>粘贴一段科研英文，几秒钟内获得改写依据、词卡和针对性练习。</p>
+          </div>
+          <Link className="button warm" href="/writing?demo=1">体验原创示例</Link>
+        </section>
+      )}
+
+      <section className="grid grid-3 support-metrics">
+        <article className="panel">
           <div className="metric">{dueWords.length}</div>
-          <p>Due for review</p>
-        </div>
-        <div className="panel">
-          <div className="metric">{masteryRate}%</div>
-          <p>Mastery rate</p>
-        </div>
+          <p>今日待复习</p>
+          <Link className="text-link" href="/review">打开复习队列</Link>
+        </article>
+        <article className="panel">
+          <div className="metric">{reviewedToday.length}</div>
+          <p>今日已复习</p>
+          <Link className="text-link" href="/words">查看词库</Link>
+        </article>
+        <article className="panel">
+          <div className="metric">{data.writingPractices.length}</div>
+          <p>累计科研写作 sessions</p>
+          <Link className="text-link" href="/writing">查看历史</Link>
+        </article>
       </section>
 
-      <section className="grid grid-2" style={{ marginTop: 16 }}>
-        <div className="panel">
-          <h2>Review Progress</h2>
-          <p>{reviewedToday.length} reviews completed today.</p>
-          <div className="progress-list">
-            {statusCounts.map((item) => (
-              <div className="progress-row" key={item.status}>
-                <span>{item.status}</span>
-                <strong>{item.count}</strong>
-              </div>
-            ))}
-          </div>
-          <Link className="button secondary" href="/review">
-            Start Review
-          </Link>
+      <section className="panel secondary-tools">
+        <div>
+          <h2>继续日常学习</h2>
+          <p>这些工具仍可独立使用，但 ResearchLoop 是推荐入口。</p>
         </div>
-        <div className="panel">
-          <h2>AI Practice</h2>
-          <div className="progress-list">
-            <div className="progress-row">
-              <span>Writing records</span>
-              <strong>{data.writingPractices.length}</strong>
-            </div>
-            <div className="progress-row">
-              <span>Grammar exercises</span>
-              <strong>{data.grammarExercises.length}</strong>
-            </div>
-            <div className="progress-row">
-              <span>Listening practices</span>
-              <strong>{data.listeningPractices.length}</strong>
-            </div>
-          </div>
-          <div className="row">
-            <Link className="button secondary" href="/writing">
-              Writing
-            </Link>
-            <Link className="button secondary" href="/grammar">
-              Grammar
-            </Link>
-            <Link className="button secondary" href="/listening">
-              Listening
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      <section className="grid grid-2" style={{ marginTop: 16 }}>
-        <div className="panel">
-          <h2>Daily Sentence</h2>
-          <p className="sentence">{daily?.sentence}</p>
-          <p>{daily?.translationZh}</p>
-          <Link className="button secondary" href="/daily">
-            Study Sentence
-          </Link>
-        </div>
-        <div className="panel">
-          <h2>Next Best Action</h2>
-          <p>
-            Import or add words first, then review due words and generate AI exercises from your real learning material.
-          </p>
-          <div className="row">
-            <Link className="button" href="/words/import">
-              Import Words
-            </Link>
-            <Link className="button secondary" href="/settings">
-              Backup Data
-            </Link>
-          </div>
+        <div className="row">
+          <Link className="button secondary" href="/daily">每日一句</Link>
+          <Link className="button secondary" href="/grammar">语法练习</Link>
+          <Link className="button secondary" href="/listening">听力训练</Link>
         </div>
       </section>
     </div>
   );
+}
+
+function formatDate(value: string) {
+  return new Intl.DateTimeFormat("zh-CN", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(value));
 }
