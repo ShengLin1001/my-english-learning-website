@@ -82,6 +82,8 @@ The import screen accepts CSV, JSON, and TXT vocabulary data. No third-party wor
 
 This repository existed before the event. The eligible submission work is the ResearchLoop extension developed on the `build-week-2026` branch after the submission period began. [`BUILD_WEEK.md`](./BUILD_WEEK.md) separates the pre-existing baseline from the new product flow and provides slots for commit, verification, demo, and primary Codex session evidence.
 
+[`SUBMISSION.md`](./SUBMISSION.md) contains ready-to-use Devpost copy, judge instructions, and an English demo script that stays under three minutes.
+
 Codex was used as the primary engineering environment to inspect the existing application, define the smallest coherent learning loop, coordinate implementation work, review deployment and data-safety constraints, and run the final checks. The deployed learning feedback provider remains configurable; the product is evaluated as a tool and workflow rather than as a model showcase.
 
 ## Verification

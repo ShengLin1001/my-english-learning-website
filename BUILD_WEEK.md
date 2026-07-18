@@ -85,5 +85,6 @@ Update this table with the final UTC timestamp and result for each release candi
 - [ ] Provide private demo credentials in the testing instructions.
 - [ ] Record a public YouTube video under three minutes with English narration or an English translation.
 - [ ] Show the working loop and explain specific Codex decisions in the narration.
+- [ ] Replace the marked fields in [`SUBMISSION.md`](./SUBMISSION.md) and use its judge path and video script.
 - [ ] Run `/feedback` in the primary Codex task and copy its Session ID.
 - [ ] Confirm the Devpost text, repository, video, and test instructions describe the same release.
