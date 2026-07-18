@@ -1,4 +1,4 @@
-import { GrammarExercise, Word } from "./types";
+import { GrammarExercise, SourceStatus, Word, WritingDiagnostic } from "./types";
 
 type JsonSchema = {
   name: string;
@@ -21,6 +21,18 @@ export type WritingFeedback = {
   conciseVersion: string;
   revisionNotes: string;
   patterns: string[];
+  diagnostics: WritingDiagnostic[];
+  learningWords: WordLearningDraft[];
+  grammarExercises: GrammarExerciseDraft[];
+};
+
+export type WordLearningDraft = WordLearningContent & {
+  text: string;
+};
+
+export type AiResult<T> = {
+  data: T;
+  sourceStatus: SourceStatus;
 };
 
 export type ListeningFeedback = {
@@ -67,7 +79,16 @@ const writingSchema: JsonSchema = {
   schema: {
     type: "object",
     additionalProperties: false,
-    required: ["polishedText", "formalVersion", "conciseVersion", "revisionNotes", "patterns"],
+    required: [
+      "polishedText",
+      "formalVersion",
+      "conciseVersion",
+      "revisionNotes",
+      "patterns",
+      "diagnostics",
+      "learningWords",
+      "grammarExercises"
+    ],
     properties: {
       polishedText: { type: "string" },
       formalVersion: { type: "string" },
@@ -78,6 +99,67 @@ const writingSchema: JsonSchema = {
         minItems: 2,
         maxItems: 5,
         items: { type: "string" }
+      },
+      diagnostics: {
+        type: "array",
+        minItems: 1,
+        maxItems: 8,
+        items: {
+          type: "object",
+          additionalProperties: false,
+          required: ["category", "original", "replacement", "reason"],
+          properties: {
+            category: { type: "string", enum: ["clarity", "grammar", "precision", "concision"] },
+            original: { type: "string" },
+            replacement: { type: "string" },
+            reason: { type: "string" }
+          }
+        }
+      },
+      learningWords: {
+        type: "array",
+        minItems: 3,
+        maxItems: 5,
+        items: {
+          type: "object",
+          additionalProperties: false,
+          required: [
+            "text",
+            "meaningZh",
+            "definitionEn",
+            "examples",
+            "collocations",
+            "academicUsage",
+            "synonyms",
+            "commonMistakes"
+          ],
+          properties: {
+            text: { type: "string" },
+            meaningZh: { type: "string" },
+            definitionEn: { type: "string" },
+            examples: { type: "array", minItems: 1, maxItems: 2, items: { type: "string" } },
+            collocations: { type: "array", minItems: 1, maxItems: 3, items: { type: "string" } },
+            academicUsage: { type: "string" },
+            synonyms: { type: "string" },
+            commonMistakes: { type: "string" }
+          }
+        }
+      },
+      grammarExercises: {
+        type: "array",
+        minItems: 2,
+        maxItems: 2,
+        items: {
+          type: "object",
+          additionalProperties: false,
+          required: ["type", "prompt", "answer", "explanation"],
+          properties: {
+            type: { type: "string", enum: ["fill", "correction", "rewrite", "naturalness"] },
+            prompt: { type: "string" },
+            answer: { type: "string" },
+            explanation: { type: "string" }
+          }
+        }
       }
     }
   }
@@ -128,14 +210,15 @@ export async function generateWordLearningContent(word: Word): Promise<WordLearn
   });
 }
 
-export async function generateWritingFeedback(inputText: string, context: string): Promise<WritingFeedback> {
+export async function generateWritingFeedback(inputText: string, context: string): Promise<AiResult<WritingFeedback>> {
   const fallback = fallbackWritingFeedback(inputText);
 
-  return callResponsesJson<WritingFeedback>({
+  return callResponsesJsonResult<WritingFeedback>({
     schema: writingSchema,
     fallback,
+    validate: isWritingFeedback,
     instructions:
-      "You are an academic English writing coach for scientific papers. Improve clarity, precision, concision, and formal academic style. Explain the revision briefly.",
+      "You are an academic English writing coach for scientific papers. Improve clarity, precision, concision, grammar, and formal style. Diagnose exact edits, extract 3-5 reusable words or phrases, and create exactly 2 short grammar exercises based on the learner's own text. Chinese explanations should be concise; examples remain English.",
     input: [`Writing context: ${context}`, `Original text: ${inputText}`].join("\n")
   });
 }
@@ -175,30 +258,48 @@ async function callResponsesJson<T>({
   instructions: string;
   input: string;
 }): Promise<T> {
+  return (await callResponsesJsonResult({ schema, fallback, instructions, input })).data;
+}
+
+async function callResponsesJsonResult<T>({
+  schema,
+  fallback,
+  instructions,
+  input,
+  validate
+}: {
+  schema: JsonSchema;
+  fallback: T;
+  instructions: string;
+  input: string;
+  validate?: (value: unknown) => value is T;
+}): Promise<AiResult<T>> {
   const provider = process.env.AI_PROVIDER || (process.env.DEEPSEEK_API_KEY ? "deepseek" : "openai");
 
   if (provider === "deepseek") {
-    return callDeepSeekJson({ schema, fallback, instructions, input });
+    return callDeepSeekJson({ schema, fallback, instructions, input, validate });
   }
 
-  return callOpenAIResponsesJson({ schema, fallback, instructions, input });
+  return callOpenAIResponsesJson({ schema, fallback, instructions, input, validate });
 }
 
 async function callOpenAIResponsesJson<T>({
   schema,
   fallback,
   instructions,
-  input
+  input,
+  validate
 }: {
   schema: JsonSchema;
   fallback: T;
   instructions: string;
   input: string;
-}): Promise<T> {
+  validate?: (value: unknown) => value is T;
+}): Promise<AiResult<T>> {
   const apiKey = process.env.OPENAI_API_KEY;
 
   if (!apiKey) {
-    return fallback;
+    return { data: fallback, sourceStatus: "fallback" };
   }
 
   try {
@@ -232,17 +333,20 @@ async function callOpenAIResponsesJson<T>({
     });
 
     if (!response.ok) {
-      return fallback;
+      return { data: fallback, sourceStatus: "fallback" };
     }
 
     const payload = (await response.json()) as { output_text?: string };
     if (!payload.output_text) {
-      return fallback;
+      return { data: fallback, sourceStatus: "fallback" };
     }
 
-    return JSON.parse(payload.output_text) as T;
+    const parsed: unknown = JSON.parse(payload.output_text);
+    return validate && !validate(parsed)
+      ? { data: fallback, sourceStatus: "fallback" }
+      : { data: parsed as T, sourceStatus: "ai" };
   } catch {
-    return fallback;
+    return { data: fallback, sourceStatus: "fallback" };
   }
 }
 
@@ -250,22 +354,23 @@ async function callDeepSeekJson<T>({
   schema,
   fallback,
   instructions,
-  input
+  input,
+  validate
 }: {
   schema: JsonSchema;
   fallback: T;
   instructions: string;
   input: string;
-}): Promise<T> {
+  validate?: (value: unknown) => value is T;
+}): Promise<AiResult<T>> {
   const apiKey = process.env.DEEPSEEK_API_KEY;
 
   if (!apiKey) {
-    return fallback;
+    return { data: fallback, sourceStatus: "fallback" };
   }
 
   const baseUrl = process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com";
   const model = process.env.DEEPSEEK_MODEL || "deepseek-v4-pro";
-  const jsonExample = buildJsonExample(schema.schema);
 
   try {
     const response = await fetch(`${baseUrl.replace(/\/$/, "")}/chat/completions`, {
@@ -282,7 +387,7 @@ async function callDeepSeekJson<T>({
             content: [
               instructions,
               "Return valid JSON only. Do not include Markdown fences or explanatory text.",
-              `The JSON object must match this example shape: ${JSON.stringify(jsonExample)}`
+              `The JSON object must match this JSON Schema: ${JSON.stringify(schema.schema)}`
             ].join("\n")
           },
           {
@@ -296,7 +401,7 @@ async function callDeepSeekJson<T>({
     });
 
     if (!response.ok) {
-      return fallback;
+      return { data: fallback, sourceStatus: "fallback" };
     }
 
     const payload = (await response.json()) as {
@@ -305,31 +410,16 @@ async function callDeepSeekJson<T>({
     const content = payload.choices?.[0]?.message?.content;
 
     if (!content) {
-      return fallback;
+      return { data: fallback, sourceStatus: "fallback" };
     }
 
-    return JSON.parse(content) as T;
+    const parsed: unknown = JSON.parse(content);
+    return validate && !validate(parsed)
+      ? { data: fallback, sourceStatus: "fallback" }
+      : { data: parsed as T, sourceStatus: "ai" };
   } catch {
-    return fallback;
+    return { data: fallback, sourceStatus: "fallback" };
   }
-}
-
-function buildJsonExample(schema: Record<string, unknown>) {
-  const properties = schema.properties;
-
-  if (!properties || typeof properties !== "object" || Array.isArray(properties)) {
-    return {};
-  }
-
-  return Object.fromEntries(
-    Object.entries(properties as Record<string, { type?: string; items?: unknown }>).map(([key, value]) => {
-      if (value.type === "array") {
-        return [key, [`${key} example`]];
-      }
-
-      return [key, `${key} example`];
-    })
-  );
 }
 
 function fallbackWordContent(word: Word): WordLearningContent {
@@ -351,14 +441,115 @@ function fallbackWordContent(word: Word): WordLearningContent {
 }
 
 function fallbackWritingFeedback(inputText: string): WritingFeedback {
+  const sentence = inputText || "The results indicate that the proposed method improves performance.";
+
   return {
-    polishedText: inputText ? `A more precise academic version: ${inputText}` : "",
-    formalVersion: inputText ? `It is demonstrated that ${inputText.charAt(0).toLowerCase()}${inputText.slice(1)}` : "",
-    conciseVersion: inputText,
+    polishedText: sentence,
+    formalVersion: sentence,
+    conciseVersion: sentence,
     revisionNotes:
-      "Fallback response: configure OPENAI_API_KEY to generate detailed AI feedback. This record is still saved for later review.",
-    patterns: ["It is demonstrated that...", "These results indicate that...", "This observation suggests that..."]
+      "AI feedback was unavailable. The original text was saved, and local fallback practice was created so you can continue learning.",
+    patterns: ["These results indicate that...", "This observation is consistent with...", "A substantial increase in..."],
+    diagnostics: [],
+    learningWords: [
+      {
+        text: "indicate",
+        meaningZh: "表明；显示",
+        definitionEn: "to show that something is likely or true",
+        examples: ["These results indicate that the treatment is effective."],
+        collocations: ["results indicate", "evidence indicates"],
+        academicUsage: "Use it to state what evidence or results support.",
+        synonyms: "show, suggest",
+        commonMistakes: "Match the verb with a plural subject: results indicate."
+      },
+      {
+        text: "consistent with",
+        meaningZh: "与……一致",
+        definitionEn: "in agreement with a result, theory, or observation",
+        examples: ["The measurements are consistent with the proposed mechanism."],
+        collocations: ["consistent with previous studies", "consistent with the hypothesis"],
+        academicUsage: "Use it to compare evidence without claiming exact proof.",
+        synonyms: "in agreement with",
+        commonMistakes: "Use with, not to: consistent with the data."
+      },
+      {
+        text: "substantial",
+        meaningZh: "显著的；大量的",
+        definitionEn: "large or important enough to be meaningful",
+        examples: ["A substantial improvement was observed after optimization."],
+        collocations: ["substantial increase", "substantial improvement"],
+        academicUsage: "Use it for a meaningful magnitude; report a number when available.",
+        synonyms: "considerable, marked",
+        commonMistakes: "Do not use it as a substitute for statistical significance."
+      }
+    ],
+    grammarExercises: [
+      {
+        type: "correction",
+        prompt: "Correct the subject-verb agreement: The results indicates a substantial improvement.",
+        answer: "The results indicate a substantial improvement.",
+        explanation: "The plural subject results takes indicate, not indicates."
+      },
+      {
+        type: "rewrite",
+        prompt: `Rewrite this sentence as concisely as possible without changing its claim: ${sentence}`,
+        answer: sentence,
+        explanation: "Compare your answer with the source and remove only words that do not change the claim."
+      }
+    ]
   };
+}
+
+function isWritingFeedback(value: unknown): value is WritingFeedback {
+  if (!isRecord(value)) return false;
+
+  const diagnostics = value.diagnostics;
+  const learningWords = value.learningWords;
+  const grammarExercises = value.grammarExercises;
+
+  return (
+    hasStrings(value, ["polishedText", "formalVersion", "conciseVersion", "revisionNotes"]) &&
+    isStringArray(value.patterns, 2, 5) &&
+    Array.isArray(diagnostics) &&
+    diagnostics.length >= 1 &&
+    diagnostics.length <= 8 &&
+    diagnostics.every(
+      (item) =>
+        isRecord(item) &&
+        ["clarity", "grammar", "precision", "concision"].includes(String(item.category)) &&
+        hasStrings(item, ["original", "replacement", "reason"])
+    ) &&
+    Array.isArray(learningWords) &&
+    learningWords.length >= 3 &&
+    learningWords.length <= 5 &&
+    learningWords.every(
+      (item) =>
+        isRecord(item) &&
+        hasStrings(item, ["text", "meaningZh", "definitionEn", "academicUsage", "synonyms", "commonMistakes"]) &&
+        isStringArray(item.examples, 1, 2) &&
+        isStringArray(item.collocations, 1, 3)
+    ) &&
+    Array.isArray(grammarExercises) &&
+    grammarExercises.length === 2 &&
+    grammarExercises.every(
+      (item) =>
+        isRecord(item) &&
+        ["fill", "correction", "rewrite", "naturalness"].includes(String(item.type)) &&
+        hasStrings(item, ["prompt", "answer", "explanation"])
+    )
+  );
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function hasStrings(value: Record<string, unknown>, keys: string[]) {
+  return keys.every((key) => typeof value[key] === "string" && value[key].trim().length > 0);
+}
+
+function isStringArray(value: unknown, min: number, max: number): value is string[] {
+  return Array.isArray(value) && value.length >= min && value.length <= max && value.every((item) => typeof item === "string" && item.trim());
 }
 
 function fallbackGrammarExercise(sourceText: string): GrammarExerciseDraft {
@@ -369,7 +560,7 @@ function fallbackGrammarExercise(sourceText: string): GrammarExerciseDraft {
     prompt: `Rewrite this sentence in a more precise academic style: ${base}`,
     answer: base,
     explanation:
-      "Fallback exercise: configure OPENAI_API_KEY to generate adaptive grammar exercises. Focus on precision, verb choice, and sentence structure."
+      "Fallback exercise: configure an AI provider to generate adaptive grammar exercises. Focus on precision, verb choice, and sentence structure."
   };
 }
 

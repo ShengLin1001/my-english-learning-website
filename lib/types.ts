@@ -1,4 +1,5 @@
 export type WordStatus = "new" | "unfamiliar" | "vague" | "familiar" | "mastered";
+export type SourceStatus = "ai" | "fallback";
 
 export type Word = {
   id: string;
@@ -48,11 +49,21 @@ export type WritingPractice = {
   conciseVersion: string;
   revisionNotes: string;
   patterns: string[];
+  diagnostics: WritingDiagnostic[];
+  sourceStatus: SourceStatus;
   createdAt: string;
+};
+
+export type WritingDiagnostic = {
+  category: "clarity" | "grammar" | "precision" | "concision";
+  original: string;
+  replacement: string;
+  reason: string;
 };
 
 export type GrammarExercise = {
   id: string;
+  sessionId: string;
   type: "fill" | "correction" | "rewrite" | "naturalness";
   prompt: string;
   answer: string;

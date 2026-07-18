@@ -10,7 +10,7 @@ import {
   createReviewLog,
   createWord,
   createWords,
-  createWritingPractice,
+  createWritingCoachSession,
   deleteStoredWord,
   nextReviewDate,
   normalizeList,
@@ -211,13 +211,15 @@ export async function deleteWord(formData: FormData) {
 
 export async function reviewWord(formData: FormData) {
   const wordId = getString(formData, "wordId");
+  const sessionId = getString(formData, "sessionId");
+  const reviewPath = sessionId ? `/review?session=${encodeURIComponent(sessionId)}` : "/review";
   const rating = getString(formData, "rating") as WordStatus;
   const userAnswer = getString(formData, "userAnswer");
   const data = await readData();
   const word = data.words.find((item) => item.id === wordId);
 
   if (!word) {
-    redirect("/review");
+    redirect(reviewPath);
   }
 
   const now = new Date().toISOString();
@@ -239,7 +241,7 @@ export async function reviewWord(formData: FormData) {
   await createReviewLog(review);
   revalidatePath("/review");
   revalidatePath("/words");
-  redirect("/review");
+  redirect(reviewPath);
 }
 
 function buildReviewFeedback(word: Word, rating: WordStatus, userAnswer: string) {
@@ -256,9 +258,12 @@ function buildReviewFeedback(word: Word, rating: WordStatus, userAnswer: string)
   return `${word.text} stays in today's queue. Review the definition, examples, and collocations before rating it again.${examplesHint} ${recallHint}`;
 }
 
-export async function addGrammarExercise() {
+export async function addGrammarExercise(formData: FormData) {
+  const sessionId = getString(formData, "sessionId");
   const data = await readData();
+  const writingPractice = data.writingPractices.find((practice) => practice.id === sessionId);
   const sourceText =
+    writingPractice?.inputText ||
     data.words[0]?.examples[0] ||
     data.dailySentences[0]?.sentence ||
     "The results indicate that the proposed method improves performance.";
@@ -266,6 +271,7 @@ export async function addGrammarExercise() {
 
   const exercise: GrammarExercise = {
     id: createId("grammar"),
+    sessionId,
     type: draft.type,
     prompt: draft.prompt,
     answer: draft.answer,
@@ -275,7 +281,7 @@ export async function addGrammarExercise() {
 
   await createGrammarExercise(exercise);
   revalidatePath("/grammar");
-  redirect("/grammar");
+  redirect(sessionId ? `/grammar?session=${encodeURIComponent(sessionId)}` : "/grammar");
 }
 
 export async function saveDailyExpression(formData: FormData) {
@@ -347,11 +353,62 @@ export async function enrichWord(formData: FormData) {
 
 export async function addWritingPractice(formData: FormData) {
   const inputText = getString(formData, "inputText");
-  const context = getString(formData, "context");
-  const feedback = await generateWritingFeedback(inputText, context);
+  const context = getString(formData, "context") || "Results";
+
+  if (!inputText) {
+    redirect("/writing?error=missing-text");
+  }
+  if (inputText.length > 6000) {
+    redirect("/writing?error=text-too-long");
+  }
+  if (context.length > 80) {
+    redirect("/writing?error=context-too-long");
+  }
+
+  const result = await generateWritingFeedback(inputText, context);
+  const feedback = result.data;
+  const sessionId = createId("writing");
+  const now = new Date().toISOString();
+  const seenWords = new Set<string>();
+  const words: Word[] = feedback.learningWords
+    .filter((draft) => {
+      const key = draft.text.trim().toLowerCase();
+      if (!key || seenWords.has(key)) return false;
+      seenWords.add(key);
+      return true;
+    })
+    .slice(0, 5)
+    .map((draft) => ({
+      id: createId("word"),
+      text: draft.text.trim().slice(0, 120),
+      phonetic: "",
+      meaningZh: draft.meaningZh.trim(),
+      definitionEn: draft.definitionEn.trim(),
+      examples: draft.examples.map((item) => item.trim()).filter(Boolean),
+      collocations: draft.collocations.map((item) => item.trim()).filter(Boolean),
+      tags: [`coach-session:${sessionId}`],
+      academicUsage: draft.academicUsage.trim(),
+      synonyms: draft.synonyms.trim(),
+      commonMistakes: draft.commonMistakes.trim(),
+      source: "ai-seed",
+      status: "new",
+      familiarity: 0,
+      nextReviewAt: now,
+      createdAt: now,
+      updatedAt: now
+    }));
+  const grammarExercises: GrammarExercise[] = feedback.grammarExercises.map((draft) => ({
+    id: createId("grammar"),
+    sessionId,
+    type: draft.type,
+    prompt: draft.prompt.trim(),
+    answer: draft.answer.trim(),
+    explanation: draft.explanation.trim(),
+    createdAt: now
+  }));
 
   const practice: WritingPractice = {
-    id: createId("writing"),
+    id: sessionId,
     inputText,
     context,
     polishedText: feedback.polishedText,
@@ -359,12 +416,18 @@ export async function addWritingPractice(formData: FormData) {
     conciseVersion: feedback.conciseVersion,
     revisionNotes: feedback.revisionNotes,
     patterns: feedback.patterns,
-    createdAt: new Date().toISOString()
+    diagnostics: feedback.diagnostics,
+    sourceStatus: result.sourceStatus,
+    createdAt: now
   };
 
-  await createWritingPractice(practice);
+  await createWritingCoachSession(practice, words, grammarExercises);
   revalidatePath("/writing");
-  redirect("/writing");
+  revalidatePath("/words");
+  revalidatePath("/review");
+  revalidatePath("/grammar");
+  revalidatePath("/");
+  redirect(`/writing?session=${encodeURIComponent(sessionId)}`);
 }
 
 export async function submitListeningPractice(formData: FormData) {

@@ -45,13 +45,13 @@ model ReviewLog {
 }
 
 model DailySentence {
-  id              String   @id
+  id              String @id
   sentence        String
-  translationZh   String   @default("")
-  grammarNotes    String   @default("")
-  keywords        String   @default("[]")
-  imitationPrompt String   @default("")
-  date            String   @unique
+  translationZh   String @default("")
+  grammarNotes    String @default("")
+  keywords        String @default("[]")
+  imitationPrompt String @default("")
+  date            String @unique
 }
 
 model WritingPractice {
@@ -63,16 +63,21 @@ model WritingPractice {
   conciseVersion String   @default("")
   revisionNotes  String   @default("")
   patterns       String   @default("[]")
+  diagnostics    String   @default("[]")
+  sourceStatus   String   @default("fallback")
   createdAt      DateTime @default(now())
 }
 
 model GrammarExercise {
   id          String   @id
+  sessionId   String   @default("")
   type        String
   prompt      String
   answer      String
   explanation String   @default("")
   createdAt   DateTime @default(now())
+
+  @@index([sessionId])
 }
 
 model ListeningPractice {
